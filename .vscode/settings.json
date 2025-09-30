@@ -1,0 +1,21 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.project.sourcePaths": [
+        "backend/auth-service/src/main/java",
+        "backend/docs-service/src/main/java"
+    ],
+    "java.project.resourcePath": [
+        "backend/auth-service/src/main/resources", 
+        "backend/docs-service/src/main/resources"
+    ],
+    "java.sources.organizeImports.starThreshold": 5,
+    "java.sources.organizeImports.staticStarThreshold": 3,
+    "files.exclude": {
+        "**/target": true,
+        "**/.classpath": true,
+        "**/.project": true,
+        "**/.settings": true,
+        "**/.factorypath": true
+    }
+}
