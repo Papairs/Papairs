@@ -6,7 +6,6 @@ import com.papairs.auth.dto.RegisterRequest;
 import com.papairs.auth.dto.UserDto;
 import com.papairs.auth.model.User;
 import com.papairs.auth.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -16,14 +15,19 @@ import java.util.UUID;
 
 @Service
 public class AuthService {
-    
-    @Autowired
-    private UserRepository userRepository;
-    
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    
+
+    private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public AuthService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder();
+    }
+
     /**
      * Register a new user
+     * @param request registration request
+     * @return AuthResponse with user details or error message
      */
     public AuthResponse register(RegisterRequest request) {
         try {
@@ -50,9 +54,11 @@ public class AuthService {
             return AuthResponse.error("Registration failed: " + e.getMessage());
         }
     }
-    
+
     /**
      * Authenticate user login
+     * @param request login request
+     * @return AuthResponse with session token and user details or error message
      */
     public AuthResponse login(LoginRequest request) {
         try {
