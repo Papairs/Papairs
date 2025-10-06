@@ -1,7 +1,14 @@
 package com.papairs.auth.controller;
 
-import com.papairs.auth.model.LoginRequest;
-import com.papairs.auth.model.ApiResponse;
+import com.papairs.auth.dto.AuthResponse;
+import com.papairs.auth.dto.LoginRequest;
+import com.papairs.auth.dto.RegisterRequest;
+import com.papairs.auth.dto.ApiResponse;
+import com.papairs.auth.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -11,6 +18,9 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
+    @Autowired
+    private AuthService authService;
+
     @GetMapping("/health")
     public ApiResponse health() {
         return new ApiResponse("success", "Auth service is running", 
@@ -19,25 +29,32 @@ public class AuthController {
                                      "status", "healthy"));
     }
 
+    /**
+     * Login user
+     */
     @PostMapping("/login")
-    public ApiResponse login(@RequestBody LoginRequest loginRequest) {
-        // Simple mock authentication
-        if ("test".equals(loginRequest.getUsername()) && "test".equals(loginRequest.getPassword())) {
-            return new ApiResponse("success", "Login successful", 
-                                  Map.of("token", "mock-jwt-token-12345",
-                                         "user", loginRequest.getUsername(),
-                                         "timestamp", LocalDateTime.now()));
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        AuthResponse response = authService.login(request);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
         } else {
-            return new ApiResponse("error", "Invalid credentials", null);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
 
+    /**
+     * Register a new user
+     */
     @PostMapping("/register")
-    public ApiResponse register(@RequestBody LoginRequest registerRequest) {
-        // Simple mock registration
-        return new ApiResponse("success", "User registered successfully", 
-                              Map.of("user", registerRequest.getUsername(),
-                                     "timestamp", LocalDateTime.now()));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+
+        if (response.isSuccess()) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 
     @GetMapping("/validate")
