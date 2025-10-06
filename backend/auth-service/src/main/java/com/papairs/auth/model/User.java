@@ -14,10 +14,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     
-    @Column(nullable = false, unique = true, length = 255)
+    @Column(nullable = false, unique = true)
     private String email;
     
-    @Column(name = "password_hash", length = 255)
+    @Column(name = "password_hash")
     private String passwordHash;
     
     @Column(name = "email_verified", nullable = false)
