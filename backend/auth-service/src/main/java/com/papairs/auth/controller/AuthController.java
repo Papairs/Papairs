@@ -1,9 +1,6 @@
 package com.papairs.auth.controller;
 
-import com.papairs.auth.dto.AuthResponse;
-import com.papairs.auth.dto.LoginRequest;
-import com.papairs.auth.dto.RegisterRequest;
-import com.papairs.auth.dto.ApiResponse;
+import com.papairs.auth.dto.*;
 import com.papairs.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -48,6 +45,31 @@ public class AuthController {
     }
 
     /**
+     * Logout user by invalidating session
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader Authorization header containing Bearer token
+     * @return ApiResponse indicating success or failure
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse> logout(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = extractBearerToken(authHeader);
+            AuthResponse response = authService.logout(token);
+
+            if (response.isSuccess()) {
+                return ResponseEntity.ok(new ApiResponse("success", response.getMessage(), null));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new ApiResponse("error", response.getMessage(), null));
+            }
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse("error", e.getMessage(), null));
+        }
+    }
+
+    /**
      * Register a new user
      * @param request registration request
      * @return AuthResponse with user details or error message
@@ -63,16 +85,53 @@ public class AuthController {
         }
     }
 
-    @GetMapping("/validate")
-    public ApiResponse validateToken(@RequestHeader("Authorization") String token) {
-        // Simple mock token validation
-        if (token != null && token.startsWith("Bearer ")) {
-            return new ApiResponse("success", "Token is valid", 
-                                  Map.of("valid", true,
-                                         "timestamp", LocalDateTime.now()));
-        } else {
-            return new ApiResponse("error", "Invalid token", 
-                                  Map.of("valid", false));
+    /**
+     * Validate session token and return user information
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader session token from Authorization header
+     * @return ApiResponse indicating if token is valid or not
+     */
+    @PostMapping("/validate")
+    public ResponseEntity<ApiResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "").trim();
+            UserDto user = authService.validateSession(token);
+
+            if (user != null) {
+                return ResponseEntity.ok(
+                        new ApiResponse("success", "Token is valid", user)
+                );
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ApiResponse("error", "Invalid or expired token", null));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ApiResponse("error", "Invalid token format", null));
         }
+    }
+
+    /**
+     * Extract Bearer token from Authorization header
+     * @param authHeader Authorization header value
+     * @return extracted token
+     * @throws IllegalArgumentException if header is invalid
+     */
+    private String extractBearerToken(String authHeader) {
+        if (authHeader == null || authHeader.isBlank()) {
+            throw new IllegalArgumentException("Authorization header is missing");
+        }
+
+        if (!authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Authorization header must start with 'Bearer '");
+        }
+
+        String token = authHeader.substring(7).trim();
+
+        if (token.isBlank()) {
+            throw new IllegalArgumentException("Token is empty");
+        }
+
+        return token;
     }
 }
