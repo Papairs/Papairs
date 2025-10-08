@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(basePackages = "com.papairs.auth.repository")
 public class DatabaseConfig {
     // Spring Boot auto-configuration handles the rest
-    // Using application-auth.properties for database settings
+    // Using application.properties for database settings
 }
