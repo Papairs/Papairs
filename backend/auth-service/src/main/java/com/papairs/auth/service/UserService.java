@@ -35,26 +35,56 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /**
+     * Find user by email
+     * @param email email address
+     * @return Optional<User> if found, else empty
+     */
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
 
+    /**
+     * Find user by ID
+     * @param id user ID
+     * @return Optional<User> if found, else empty
+     */
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
     }
 
+    /**
+     * Check if email exists
+     * @param email email address
+     * @return true if exists, else false
+     */
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
     }
 
+    /**
+     * Check if user account is active
+     * @param user User entity
+     * @return true if active, else false
+     */
     public boolean isUserActive(User user) {
         return user.getIsActive();
     }
 
+    /**
+     * Verify plain password against hashed password
+     * @param plainPassword unhashed password
+     * @param hashedPassword hashed password
+     * @return true if matches, else false
+     */
     public boolean verifyPassword(String plainPassword, String hashedPassword) {
         return passwordEncoder.matches(plainPassword, hashedPassword);
     }
 
+    /**
+     * Update user's last login timestamp
+     * @param userId user ID
+     */
     @Transactional
     public void updateLastLogin(String userId) {
         Optional<User> userOpt = userRepository.findById(userId);
@@ -64,6 +94,11 @@ public class UserService {
         });
     }
 
+    /**
+     * Convert User entity to UserDto
+     * @param user User entity
+     * @return UserDto
+     */
     public UserDto toDto(User user) {
         return new UserDto(
                 user.getId(),
