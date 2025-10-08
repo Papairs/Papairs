@@ -2,6 +2,7 @@ package com.papairs.auth.service;
 
 import com.papairs.auth.model.Session;
 import com.papairs.auth.repository.SessionRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,8 @@ import java.util.UUID;
 @Service
 public class SessionService {
 
+    @Value("${session.duration.hours:24}")
+    private int sessionDurationHours;
     private final SessionRepository sessionRepository;
     private final SecureRandom secureRandom;
 
@@ -29,13 +32,11 @@ public class SessionService {
      */
     @Transactional
     public Session createSession(String userId) {
-        int tokenDuration = 2; // hours
-
         Session session = new Session();
         session.setId(UUID.randomUUID().toString());
         session.setUserId(userId);
         session.setToken(generateSecureToken());
-        session.setExpiresAt(LocalDateTime.now().plusHours(tokenDuration));
+        session.setExpiresAt(LocalDateTime.now().plusHours(sessionDurationHours));
         session.setCreatedAt(LocalDateTime.now());
         session.setLastActiveAt(LocalDateTime.now());
 
