@@ -94,7 +94,7 @@ public class AuthController {
     @PostMapping("/validate")
     public ResponseEntity<ApiResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {
-            String token = authHeader.replace("Bearer ", "").trim();
+            String token = extractBearerToken(authHeader);
             UserDto user = authService.validateSession(token);
 
             if (user != null) {
