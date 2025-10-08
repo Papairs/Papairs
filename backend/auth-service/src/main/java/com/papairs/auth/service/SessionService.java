@@ -45,10 +45,19 @@ public class SessionService {
         return session;
     }
 
+    /**
+     * Find a session by its token
+     * @param token session token
+     * @return Optional<Session> if found, else empty
+     */
     public Optional<Session> findByToken(String token) {
         return sessionRepository.findByToken(token);
     }
 
+    /**
+     * Update the last active timestamp of a session
+     * @param session Session entity
+     */
     @Transactional
     public void updateLastActive(Session session) {
         // Only update if > 5 minutes old
@@ -58,6 +67,11 @@ public class SessionService {
         }
     }
 
+    /**
+     * Check if a session is expired
+     * @param session Session entity
+     * @return true if expired, else false
+     */
     public boolean isExpired(Session session) {
         return session.getExpiresAt().isBefore(LocalDateTime.now());
     }
