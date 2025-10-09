@@ -139,6 +139,7 @@ public class AuthService {
         User user = userOpt.get();
 
         if (!userService.isUserActive(user)) {
+            sessionService.delete(session);
             return null;
         }
 
