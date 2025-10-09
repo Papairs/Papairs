@@ -44,6 +44,13 @@ public class AuthService {
 
     /**
      * Authenticate user login
+     *
+     * Firstly, check if user exists
+     * Check if user is active
+     * Check if password matches
+     * Update last login timestamp
+     * Create session and return token
+     *
      * @param request login request
      * @return AuthResponse with session token and user details or error message
      */
@@ -96,27 +103,34 @@ public class AuthService {
 
     /**
      * Validate session and return user information
+     *
+     * Firstly, check if session exists
+     * Check if session is expired, if so delete it
+     * Check if user exists and is active, if not delete session
+     * Lastly, update session last active timestamp
+     *
+     * TODO: Use try-catch to handle unexpected errors
+     *
      * @param token session token
      * @return UserDto if valid, null if invalid
      */
     @Transactional
     public UserDto validateSession(String token) {
-
         Optional<Session> sessionOpt = sessionService.findByToken(token);
+
         if (sessionOpt.isEmpty()) {
             return null;
         }
 
         Session session = sessionOpt.get();
 
-        // Check if expired
         if (sessionService.isExpired(session)) {
             sessionService.delete(session);
             return null;
         }
 
-        // Check if user exists
         Optional<User> userOpt = userService.findById(session.getUserId());
+
         if (userOpt.isEmpty()) {
             sessionService.delete(session);
             return null;
@@ -124,7 +138,6 @@ public class AuthService {
 
         User user = userOpt.get();
 
-        // Check if user is active
         if (!userService.isUserActive(user)) {
             return null;
         }
