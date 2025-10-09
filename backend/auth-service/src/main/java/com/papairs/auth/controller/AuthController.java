@@ -57,15 +57,15 @@ public class AuthController {
             AuthResponse response = authService.logout(token);
 
             if (response.isSuccess()) {
-                return ResponseEntity.ok(new ApiResponse("success", response.getMessage(), null));
+                return ResponseEntity.ok(new ApiResponse("success", response.getMessage()));
             } else {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ApiResponse("error", response.getMessage(), null));
+                        .body(new ApiResponse("error", response.getMessage()));
             }
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse("error", e.getMessage(), null));
+                    .body(new ApiResponse("error", e.getMessage()));
         }
     }
 
@@ -103,11 +103,11 @@ public class AuthController {
                 );
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new ApiResponse("error", "Invalid or expired token", null));
+                        .body(new ApiResponse("error", "Invalid or expired token"));
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(new ApiResponse("error", "Invalid token format", null));
+                    .body(new ApiResponse("error", "Invalid token format"));
         }
     }
 

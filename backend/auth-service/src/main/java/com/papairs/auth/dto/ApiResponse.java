@@ -13,6 +13,12 @@ public class ApiResponse {
         this.data = data;
     }
 
+    public ApiResponse(String status, String message) {
+        this.status = status;
+        this.message = message;
+        this.data = null;
+    }
+
     public String getStatus() {
         return status;
     }
