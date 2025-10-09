@@ -1,6 +1,9 @@
 package com.papairs.auth.service;
 
-import com.papairs.auth.dto.*;
+import com.papairs.auth.dto.request.LoginRequest;
+import com.papairs.auth.dto.request.RegisterRequest;
+import com.papairs.auth.dto.response.AuthResponse;
+import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.model.Session;
 import com.papairs.auth.model.User;
 import org.springframework.stereotype.Service;
@@ -33,9 +36,9 @@ public class AuthService {
 
             User user = userService.createUser(request.getEmail(), request.getPassword());
 
-            UserDto userDto = userService.toDto(user);
+            UserResponse userResponse = userService.toDto(user);
 
-            return AuthResponse.success("User registered successfully", null, userDto);
+            return AuthResponse.success("User registered successfully", null, userResponse);
             
         } catch (Exception e) {
             return AuthResponse.error("Registration failed: " + e.getMessage());
@@ -77,9 +80,9 @@ public class AuthService {
 
             Session session = sessionService.createSession(user.getId());
 
-            UserDto userDto = userService.toDto(user);
+            UserResponse userResponse = userService.toDto(user);
             
-            return AuthResponse.success("Login successful", session.getToken(), userDto);
+            return AuthResponse.success("Login successful", session.getToken(), userResponse);
             
         } catch (Exception e) {
             return AuthResponse.error("Login failed: " + e.getMessage());
@@ -115,7 +118,7 @@ public class AuthService {
      * @return UserDto if valid, null if invalid
      */
     @Transactional
-    public UserDto validateSession(String token) {
+    public UserResponse validateSession(String token) {
         Optional<Session> sessionOpt = sessionService.findByToken(token);
 
         if (sessionOpt.isEmpty()) {

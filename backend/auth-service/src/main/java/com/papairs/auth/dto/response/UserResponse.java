@@ -1,8 +1,8 @@
-package com.papairs.auth.dto;
+package com.papairs.auth.dto.response;
 
 import java.time.LocalDateTime;
 
-public class UserDto {
+public class UserResponse {
     
     private String id;
     private String email;
@@ -11,11 +11,11 @@ public class UserDto {
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
 
-    public UserDto() {
+    public UserResponse() {
     }
 
-    public UserDto(String id, String email, Boolean emailVerified, Boolean isActive,
-                   LocalDateTime createdAt, LocalDateTime lastLoginAt) {
+    public UserResponse(String id, String email, Boolean emailVerified, Boolean isActive,
+                        LocalDateTime createdAt, LocalDateTime lastLoginAt) {
         this.id = id;
         this.email = email;
         this.emailVerified = emailVerified;

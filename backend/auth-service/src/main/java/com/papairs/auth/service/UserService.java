@@ -1,6 +1,6 @@
 package com.papairs.auth.service;
 
-import com.papairs.auth.dto.UserDto;
+import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.model.User;
 import com.papairs.auth.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -100,8 +100,8 @@ public class UserService {
      * @param user User entity
      * @return UserDto
      */
-    public UserDto toDto(User user) {
-        return new UserDto(
+    public UserResponse toDto(User user) {
+        return new UserResponse(
                 user.getId(),
                 user.getEmail(),
                 user.getEmailVerified(),

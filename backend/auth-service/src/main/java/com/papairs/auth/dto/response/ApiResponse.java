@@ -1,4 +1,4 @@
-package com.papairs.auth.dto;
+package com.papairs.auth.dto.response;
 
 public class ApiResponse {
     private String status;

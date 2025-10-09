@@ -1,4 +1,4 @@
-package com.papairs.auth.dto;
+package com.papairs.auth.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

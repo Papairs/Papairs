@@ -1,6 +1,10 @@
 package com.papairs.auth.controller;
 
-import com.papairs.auth.dto.*;
+import com.papairs.auth.dto.request.LoginRequest;
+import com.papairs.auth.dto.request.RegisterRequest;
+import com.papairs.auth.dto.response.ApiResponse;
+import com.papairs.auth.dto.response.AuthResponse;
+import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -95,7 +99,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
         try {
             String token = extractBearerToken(authHeader);
-            UserDto user = authService.validateSession(token);
+            UserResponse user = authService.validateSession(token);
 
             if (user != null) {
                 return ResponseEntity.ok(

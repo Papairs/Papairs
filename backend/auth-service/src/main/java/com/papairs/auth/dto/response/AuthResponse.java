@@ -1,11 +1,11 @@
-package com.papairs.auth.dto;
+package com.papairs.auth.dto.response;
 
 public class AuthResponse {
     
     private boolean success;
     private String message;
     private String sessionToken;
-    private UserDto user;
+    private UserResponse user;
 
     public AuthResponse() {
     }
@@ -15,14 +15,14 @@ public class AuthResponse {
         this.message = message;
     }
 
-    public AuthResponse(boolean success, String message, String sessionToken, UserDto user) {
+    public AuthResponse(boolean success, String message, String sessionToken, UserResponse user) {
         this.success = success;
         this.message = message;
         this.sessionToken = sessionToken;
         this.user = user;
     }
 
-    public static AuthResponse success(String message, String sessionToken, UserDto user) {
+    public static AuthResponse success(String message, String sessionToken, UserResponse user) {
         return new AuthResponse(true, message, sessionToken, user);
     }
     
@@ -58,11 +58,11 @@ public class AuthResponse {
         this.sessionToken = sessionToken;
     }
     
-    public UserDto getUser() {
+    public UserResponse getUser() {
         return user;
     }
     
-    public void setUser(UserDto user) {
+    public void setUser(UserResponse user) {
         this.user = user;
     }
 }
