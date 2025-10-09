@@ -26,6 +26,7 @@ public class UserService {
      * @param password unhashed password
      * @return created User
      */
+    @Transactional
     public User createUser(String email, String password) {
         User user = new User();
         user.setEmail(email);

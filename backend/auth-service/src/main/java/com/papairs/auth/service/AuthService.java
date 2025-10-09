@@ -24,6 +24,7 @@ public class AuthService {
      * @param request registration request
      * @return AuthResponse with user details or error message
      */
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
         try {
             if (userService.emailExists(request.getEmail())) {
@@ -46,6 +47,7 @@ public class AuthService {
      * @param request login request
      * @return AuthResponse with session token and user details or error message
      */
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         try {
             Optional<User> userOpt = userService.findByEmail(request.getEmail());
@@ -97,6 +99,7 @@ public class AuthService {
      * @param token session token
      * @return UserDto if valid, null if invalid
      */
+    @Transactional
     public UserDto validateSession(String token) {
 
         Optional<Session> sessionOpt = sessionService.findByToken(token);

@@ -100,6 +100,7 @@ public class SessionService {
      * @param userId user ID
      * @return number of sessions deleted
      */
+    @Transactional
     public int deleteAllUserSessions(String userId) {
         return sessionRepository.deleteByUserId(userId);
     }
@@ -107,6 +108,7 @@ public class SessionService {
     /**
      * Delete all expired sessions (clean-up)
      */
+    @Transactional
     public int deleteExpiredSessions() {
         return sessionRepository.deleteByExpiresAtBefore(LocalDateTime.now());
     }
