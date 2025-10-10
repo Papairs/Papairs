@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class LoginRequest {
 
-    @Email(message = "Invalid email format")
+    @Email(message = "Email must be valid")
     @NotBlank(message = "Email is required")
     private String email;
 
