@@ -3,7 +3,7 @@ package com.papairs.auth.service;
 import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.model.User;
 import com.papairs.auth.repository.UserRepository;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,11 +13,11 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.passwordEncoder = passwordEncoder;
     }
 
     /**
