@@ -5,6 +5,7 @@ import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.ApiResponse;
 import com.papairs.auth.dto.response.AuthResponse;
 import com.papairs.auth.dto.response.UserResponse;
+import com.papairs.auth.exception.InvalidAuthHeaderException;
 import com.papairs.auth.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -120,20 +121,23 @@ public class AuthController {
      * @param authHeader Authorization header value
      * @return extracted token
      * @throws IllegalArgumentException if header is invalid
-     */
+     * */
     private String extractBearerToken(String authHeader) {
         if (authHeader == null || authHeader.isBlank()) {
             throw new IllegalArgumentException("Authorization header is missing");
+            throw new InvalidAuthHeaderException("Authorization header is missing");
         }
 
         if (!authHeader.startsWith("Bearer ")) {
             throw new IllegalArgumentException("Authorization header must start with 'Bearer '");
+            throw new InvalidAuthHeaderException("Authorization header must start with 'Bearer '");
         }
 
         String token = authHeader.substring(7).trim();
 
         if (token.isBlank()) {
             throw new IllegalArgumentException("Token is empty");
+            throw new InvalidAuthHeaderException("Token is empty");
         }
 
         return token;
