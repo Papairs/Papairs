@@ -6,15 +6,15 @@ public class UserResponse {
     
     private String id;
     private String email;
-    private Boolean emailVerified;
-    private Boolean isActive;
+    private boolean emailVerified;
+    private boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime lastLoginAt;
 
     public UserResponse() {
     }
 
-    public UserResponse(String id, String email, Boolean emailVerified, Boolean isActive,
+    public UserResponse(String id, String email, boolean emailVerified, boolean isActive,
                         LocalDateTime createdAt, LocalDateTime lastLoginAt) {
         this.id = id;
         this.email = email;
@@ -40,19 +40,19 @@ public class UserResponse {
         this.email = email;
     }
     
-    public Boolean getEmailVerified() {
+    public boolean getEmailVerified() {
         return emailVerified;
     }
     
-    public void setEmailVerified(Boolean emailVerified) {
+    public void setEmailVerified(boolean emailVerified) {
         this.emailVerified = emailVerified;
     }
     
-    public Boolean getIsActive() {
+    public boolean getIsActive() {
         return isActive;
     }
     
-    public void setIsActive(Boolean isActive) {
+    public void setIsActive(boolean isActive) {
         this.isActive = isActive;
     }
     

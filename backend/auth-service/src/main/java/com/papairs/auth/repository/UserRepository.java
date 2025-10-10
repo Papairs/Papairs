@@ -41,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, String> {
      * @return List of users with the given email verification status
      */
     @Query("SELECT u FROM User u WHERE u.emailVerified = :verified")
-    List<User> findByEmailVerified(@Param("verified") Boolean verified);
+    List<User> findByEmailVerified(@Param("verified") boolean verified);
 
     /**
      * Update last login timestamp
@@ -61,7 +61,7 @@ public interface UserRepository extends JpaRepository<User, String> {
      */
     @Modifying
     @Query("UPDATE User u SET u.isActive = :active WHERE u.id = :userId")
-    int updateUserActiveStatus(@Param("userId") String userId, @Param("active") Boolean active);
+    int updateUserActiveStatus(@Param("userId") String userId, @Param("active") boolean active);
 
     /**
      * Mark email as verified
