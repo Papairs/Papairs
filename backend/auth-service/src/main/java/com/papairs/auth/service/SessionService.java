@@ -28,7 +28,7 @@ public class SessionService {
     /**
      * Create a new session for a user
      * @param userId user ID
-     * @return created Session
+     * @return Session entity
      */
     @Transactional
     public Session createSession(String userId) {
