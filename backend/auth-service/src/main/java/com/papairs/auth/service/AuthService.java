@@ -2,14 +2,15 @@ package com.papairs.auth.service;
 
 import com.papairs.auth.dto.request.LoginRequest;
 import com.papairs.auth.dto.request.RegisterRequest;
-import com.papairs.auth.dto.response.AuthResponse;
-import com.papairs.auth.dto.response.UserResponse;
+import com.papairs.auth.dto.response.LoginResponse;
+import com.papairs.auth.exception.AuthenticationException;
+import com.papairs.auth.exception.InvalidTokenException;
+import com.papairs.auth.exception.UserAlreadyExistsException;
+import com.papairs.auth.exception.UserDeactivatedException;
 import com.papairs.auth.model.Session;
 import com.papairs.auth.model.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Optional;
 
 @Service
 public class AuthService {
@@ -25,24 +26,16 @@ public class AuthService {
     /**
      * Register a new user
      * @param request registration request
-     * @return AuthResponse with user details or error message
+     * @return User entity if successful, else throw exception
      */
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        try {
-            if (userService.emailExists(request.getEmail())) {
-                return AuthResponse.error("Email already registered");
-            }
-
-            User user = userService.createUser(request.getEmail(), request.getPassword());
-
-            UserResponse userResponse = userService.toDto(user);
-
-            return AuthResponse.success("User registered successfully", null, userResponse);
-            
-        } catch (Exception e) {
-            return AuthResponse.error("Registration failed: " + e.getMessage());
+    public User register(RegisterRequest request) {
+        if (userService.emailExists(request.getEmail())) {
+            throw new UserAlreadyExistsException("Email already registered");
         }
+
+        return userService.createUser(request.getEmail(), request.getPassword())
+                .orElseThrow(() -> new AuthenticationException("Failed to create user"));
     }
 
     /**
@@ -55,53 +48,36 @@ public class AuthService {
      * Create session and return token
      *
      * @param request login request
-     * @return AuthResponse with session token and user details or error message
+     * @return LoginResponse with session token and user details, else throw exception
      */
     @Transactional
-    public AuthResponse login(LoginRequest request) {
-        try {
-            Optional<User> userOpt = userService.findByEmail(request.getEmail());
+    public LoginResponse login(LoginRequest request) {
+        User user = userService.findByEmail(request.getEmail())
+                .orElseThrow(() -> new AuthenticationException("Invalid credentials"));
 
-            if (userOpt.isEmpty()) {
-                return AuthResponse.error("Invalid email or password");
-            }
-            
-            User user = userOpt.get();
-
-            if (!userService.isUserActive(user)) {
-                return AuthResponse.error("Account is deactivated");
-            }
-
-            if (!userService.verifyPassword(request.getPassword(), user.getPasswordHash())) {
-                return AuthResponse.error("Invalid email or password");
-            }
-
-            userService.updateLastLogin(user.getId());
-
-            Session session = sessionService.createSession(user.getId());
-
-            UserResponse userResponse = userService.toDto(user);
-            
-            return AuthResponse.success("Login successful", session.getToken(), userResponse);
-            
-        } catch (Exception e) {
-            return AuthResponse.error("Login failed: " + e.getMessage());
+        if (!userService.isUserActive(user)) {
+            throw new UserDeactivatedException("Account is deactivated");
         }
+
+        if (!userService.verifyPassword(request.getPassword(), user.getPasswordHash())) {
+            throw new AuthenticationException("Invalid credentials");
+        }
+
+        Session session = sessionService.createSession(user.getId());
+
+        userService.updateLastLogin(user.getId());
+
+        return new LoginResponse(session, user);
     }
 
     /**
      * Logout user by deleting session
      * @param token session token
-     * @return AuthResponse indicating success or failure
+     * Does not throw error if session not found for security reasons
      */
     @Transactional
-    public AuthResponse logout(String token) {
-        try {
-            sessionService.deleteByToken(token);
-            return AuthResponse.success("Logout successful", null, null);
-        } catch (Exception e) {
-            return AuthResponse.error("Logout failed: " + e.getMessage());
-        }
+    public void logout(String token) {
+        sessionService.deleteByToken(token);
     }
 
     /**
@@ -109,45 +85,33 @@ public class AuthService {
      *
      * Firstly, check if session exists
      * Check if session is expired, if so delete it
-     * Check if user exists and is active, if not delete session
+     * Check if user exists
+     * Check if user is active, if not delete session
      * Lastly, update session last active timestamp
      *
-     * TODO: Use try-catch to handle unexpected errors
-     *
      * @param token session token
-     * @return UserDto if valid, null if invalid
+     * @return User entity if valid, else throw exception
      */
     @Transactional
-    public UserResponse validateSession(String token) {
-        Optional<Session> sessionOpt = sessionService.findByToken(token);
-
-        if (sessionOpt.isEmpty()) {
-            return null;
-        }
-
-        Session session = sessionOpt.get();
+    public User validateSession(String token) {
+        Session session = sessionService.findByToken(token)
+                .orElseThrow(() -> new InvalidTokenException("Invalid session token"));
 
         if (sessionService.isExpired(session)) {
             sessionService.delete(session);
-            return null;
+            throw new InvalidTokenException("Session expired");
         }
 
-        Optional<User> userOpt = userService.findById(session.getUserId());
-
-        if (userOpt.isEmpty()) {
-            sessionService.delete(session);
-            return null;
-        }
-
-        User user = userOpt.get();
+        User user = userService.findById(session.getUserId())
+                .orElseThrow(() -> new AuthenticationException("User not found for session"));
 
         if (!userService.isUserActive(user)) {
             sessionService.delete(session);
-            return null;
+            throw new UserDeactivatedException("User account is deactivated");
         }
 
         sessionService.updateLastActive(session);
 
-        return userService.toDto(user);
+        return user;
     }
 }

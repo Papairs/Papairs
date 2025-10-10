@@ -1,6 +1,5 @@
 package com.papairs.auth.service;
 
-import com.papairs.auth.dto.response.UserResponse;
 import com.papairs.auth.model.User;
 import com.papairs.auth.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,16 +23,16 @@ public class UserService {
      * Create a new user with hashed password
      * @param email user email
      * @param password unhashed password
-     * @return created User
+     * @return Optional<User> if created, else empty
      */
     @Transactional
-    public User createUser(String email, String password) {
+    public Optional<User> createUser(String email, String password) {
         User user = new User();
         user.setEmail(email);
         user.setPasswordHash(passwordEncoder.encode(password));
         user.setEmailVerified(false);
         user.setIsActive(true);
-        return userRepository.save(user);
+        return Optional.of(userRepository.save(user));
     }
 
     /**
@@ -88,26 +87,6 @@ public class UserService {
      */
     @Transactional
     public void updateLastLogin(String userId) {
-        Optional<User> userOpt = userRepository.findById(userId);
-        userOpt.ifPresent(user -> {
-            user.setLastLoginAt(LocalDateTime.now());
-            userRepository.save(user);
-        });
-    }
-
-    /**
-     * Convert User entity to UserDto
-     * @param user User entity
-     * @return UserDto
-     */
-    public UserResponse toDto(User user) {
-        return new UserResponse(
-                user.getId(),
-                user.getEmail(),
-                user.getEmailVerified(),
-                user.getIsActive(),
-                user.getCreatedAt(),
-                user.getLastLoginAt()
-        );
+        userRepository.updateLastLoginAt(userId, LocalDateTime.now());
     }
 }
