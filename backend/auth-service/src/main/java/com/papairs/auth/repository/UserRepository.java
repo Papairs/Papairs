@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,7 +33,7 @@ public interface UserRepository extends JpaRepository<User, String> {
      * @return List of active users
      */
     @Query("SELECT u FROM User u WHERE u.isActive = true")
-    java.util.List<User> findAllActiveUsers();
+    List<User> findAllActiveUsers();
 
     /**
      * Find users by email verification status
@@ -40,7 +41,7 @@ public interface UserRepository extends JpaRepository<User, String> {
      * @return List of users with the given email verification status
      */
     @Query("SELECT u FROM User u WHERE u.emailVerified = :verified")
-    java.util.List<User> findByEmailVerified(@Param("verified") Boolean verified);
+    List<User> findByEmailVerified(@Param("verified") Boolean verified);
 
     /**
      * Update last login timestamp

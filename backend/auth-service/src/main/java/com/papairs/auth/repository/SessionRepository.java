@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -32,11 +34,10 @@ public interface SessionRepository extends JpaRepository<Session, String> {
      * @return List of sessions for the user
      */
     @Query("SELECT s FROM Session s WHERE s.userId = :userId")
-    java.util.List<Session> findByUserId(String userId);
+    List<Session> findByUserId(String userId);
 
     /** Delete a session by its token
      * @param token session token
-     * @return number of rows affected
      */
     @Modifying
     @Transactional
@@ -61,5 +62,5 @@ public interface SessionRepository extends JpaRepository<Session, String> {
     @Modifying
     @Transactional
     @Query("DELETE FROM Session s WHERE s.expiresAt < :currentTime")
-    int deleteByExpiresAtBefore(java.time.LocalDateTime currentTime);
+    int deleteByExpiresAtBefore(LocalDateTime currentTime);
 }
