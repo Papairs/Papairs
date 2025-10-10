@@ -47,11 +47,10 @@ public interface UserRepository extends JpaRepository<User, String> {
      * Update last login timestamp
      * @param userId user ID
      * @param loginTime login timestamp
-     * @return number of rows affected
      */
     @Modifying
     @Query("UPDATE User u SET u.lastLoginAt = :loginTime WHERE u.id = :userId")
-    int updateLastLoginAt(@Param("userId") String userId, @Param("loginTime") LocalDateTime loginTime);
+    void updateLastLoginAt(@Param("userId") String userId, @Param("loginTime") LocalDateTime loginTime);
 
     /**
      * Activate/Deactivate user account
