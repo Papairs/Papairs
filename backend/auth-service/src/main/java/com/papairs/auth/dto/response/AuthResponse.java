@@ -1,5 +1,8 @@
 package com.papairs.auth.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse {
     
     private boolean success;
@@ -24,6 +27,10 @@ public class AuthResponse {
 
     public static AuthResponse success(String message, String sessionToken, UserResponse user) {
         return new AuthResponse(true, message, sessionToken, user);
+    }
+
+    public static AuthResponse success(String message, UserResponse user) {
+        return new AuthResponse(true, message, null, user);
     }
     
     public static AuthResponse success(String message) {
