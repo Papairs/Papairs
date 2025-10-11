@@ -1,5 +1,6 @@
 package com.papairs.auth.service;
 
+import com.papairs.auth.dto.request.ChangePasswordRequest;
 import com.papairs.auth.dto.request.LoginRequest;
 import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.LoginResponse;
@@ -113,5 +114,33 @@ public class AuthService {
         sessionService.updateLastActive(session);
 
         return user;
+    }
+
+    /**
+     * Change user password
+     * TODO: Write custom annotation to validate newPassword and confirmPassword match to accumulate all validation errors in ChangePasswordRequest
+     * @param token session token
+     * @param request change password request
+     */
+
+    @Transactional
+    public void changePassword(String token, ChangePasswordRequest request) {
+        User user = validateSession(token);
+
+        if (!request.isNewPasswordDifferent()) {
+            throw new AuthenticationException("New password must be different from old password");
+        }
+
+        if (!request.isNewPasswordConfirmed()) {
+            throw new AuthenticationException("New password and confirmation password do not match");
+        }
+
+        if (!userService.verifyPassword(request.getOldPassword(), user.getPasswordHash())) {
+            throw new AuthenticationException("Old password is incorrect");
+        }
+
+        userService.changePassword(user.getId(), request.getNewPassword());
+
+        sessionService.deleteAllUserSessions(user.getId());
     }
 }

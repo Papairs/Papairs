@@ -1,5 +1,6 @@
 package com.papairs.auth.controller;
 
+import com.papairs.auth.dto.request.ChangePasswordRequest;
 import com.papairs.auth.dto.request.LoginRequest;
 import com.papairs.auth.dto.request.RegisterRequest;
 import com.papairs.auth.dto.response.ApiResponse;
@@ -100,10 +101,27 @@ public class AuthController {
     }
 
     /**
+     * Change user password
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader session token from Authorization header
+     * @param request change password request
+     * @return AuthResponse indicating success or failure
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody ChangePasswordRequest request){
+        String token = extractBearerToken(authHeader);
+        authService.changePassword(token, request);
+
+        return ResponseEntity.ok(
+                AuthResponse.success("Password changed successfully")
+        );
+    }
+
+    /**
      * Extract Bearer token from Authorization header
      * @param authHeader Authorization header value
      * @return extracted token
-     * */
+     */
     private String extractBearerToken(String authHeader) {
         if (authHeader == null || authHeader.isBlank()) {
             throw new InvalidAuthHeaderException("Authorization header is missing");

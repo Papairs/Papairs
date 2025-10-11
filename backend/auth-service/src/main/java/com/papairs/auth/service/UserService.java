@@ -89,4 +89,14 @@ public class UserService {
     public void updateLastLogin(String userId) {
         userRepository.updateLastLoginAt(userId, LocalDateTime.now());
     }
+
+    /**
+     * Change user password
+     * @param userId user ID
+     * @param newPassword new unhashed password
+     */
+    @Transactional
+    public void changePassword(String userId, String newPassword) {
+        userRepository.updatePasswordHash(userId, passwordEncoder.encode(newPassword));
+    }
 }
