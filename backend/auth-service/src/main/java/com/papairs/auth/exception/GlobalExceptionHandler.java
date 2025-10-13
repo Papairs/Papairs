@@ -98,12 +98,12 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Catch-all for any other exceptions
+     * Handle exceptions for NullPointerException and IllegalArgumentException
      * @param e exception
      * @return ResponseEntity (500 Internal Server Error)
      */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<AuthResponse> handleGenericException(Exception e) {
+    @ExceptionHandler({NullPointerException.class, IllegalArgumentException.class})
+    public ResponseEntity<AuthResponse> handleCommonExceptions(Exception e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(AuthResponse.error("An unexpected error occurred"));
     }
