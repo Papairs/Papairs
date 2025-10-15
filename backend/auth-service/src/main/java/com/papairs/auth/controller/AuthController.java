@@ -1,7 +1,18 @@
 package com.papairs.auth.controller;
 
-import com.papairs.auth.model.LoginRequest;
-import com.papairs.auth.model.ApiResponse;
+import com.papairs.auth.dto.request.ChangePasswordRequest;
+import com.papairs.auth.dto.request.LoginRequest;
+import com.papairs.auth.dto.request.RegisterRequest;
+import com.papairs.auth.dto.response.ApiResponse;
+import com.papairs.auth.dto.response.AuthResponse;
+import com.papairs.auth.dto.response.LoginResponse;
+import com.papairs.auth.dto.response.UserResponse;
+import com.papairs.auth.exception.InvalidAuthHeaderException;
+import com.papairs.auth.model.User;
+import com.papairs.auth.service.AuthService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -11,6 +22,12 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000")
 public class AuthController {
 
+    private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
+
     @GetMapping("/health")
     public ApiResponse health() {
         return new ApiResponse("success", "Auth service is running", 
@@ -19,37 +36,123 @@ public class AuthController {
                                      "status", "healthy"));
     }
 
+    /**
+     * Login user
+     * @param request login request
+     * @return AuthResponse with user details and token or error message
+     */
     @PostMapping("/login")
-    public ApiResponse login(@RequestBody LoginRequest loginRequest) {
-        // Simple mock authentication
-        if ("test".equals(loginRequest.getUsername()) && "test".equals(loginRequest.getPassword())) {
-            return new ApiResponse("success", "Login successful", 
-                                  Map.of("token", "mock-jwt-token-12345",
-                                         "user", loginRequest.getUsername(),
-                                         "timestamp", LocalDateTime.now()));
-        } else {
-            return new ApiResponse("error", "Invalid credentials", null);
-        }
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        LoginResponse loginDto = authService.login(request);
+        UserResponse userDto = toDto(loginDto.getUser());
+
+        return ResponseEntity.ok(
+                AuthResponse.success("Login successful",
+                        loginDto.getSession().getToken(), userDto)
+        );
     }
 
+    /**
+     * Logout user by invalidating session
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader Authorization header containing Bearer token
+     * @return AuthResponse indicating success or failure
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(@RequestHeader("Authorization") String authHeader) {
+        String token = extractBearerToken(authHeader);
+        authService.logout(token);
+
+        return ResponseEntity.ok(
+                AuthResponse.success("Logout successful")
+        );
+    }
+
+    /**
+     * Register a new user
+     * @param request registration request
+     * @return AuthResponse with user details or error message
+     * Does not return a sessionToken
+     */
     @PostMapping("/register")
-    public ApiResponse register(@RequestBody LoginRequest registerRequest) {
-        // Simple mock registration
-        return new ApiResponse("success", "User registered successfully", 
-                              Map.of("user", registerRequest.getUsername(),
-                                     "timestamp", LocalDateTime.now()));
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        User user = authService.register(request);
+        UserResponse userDto = toDto(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                AuthResponse.success("User registered successfully", userDto)
+        );
     }
 
-    @GetMapping("/validate")
-    public ApiResponse validateToken(@RequestHeader("Authorization") String token) {
-        // Simple mock token validation
-        if (token != null && token.startsWith("Bearer ")) {
-            return new ApiResponse("success", "Token is valid", 
-                                  Map.of("valid", true,
-                                         "timestamp", LocalDateTime.now()));
-        } else {
-            return new ApiResponse("error", "Invalid token", 
-                                  Map.of("valid", false));
+    /**
+     * Validate session token and return user information
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader session token from Authorization header
+     * @return AuthResponse indicating if token is valid or not
+     */
+    @PostMapping("/validate")
+    public ResponseEntity<AuthResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+        String token = extractBearerToken(authHeader);
+        User user = authService.validateSession(token);
+
+        return ResponseEntity.ok(
+                AuthResponse.success("Token is valid", toDto(user))
+        );
+    }
+
+    /**
+     * Change user password
+     * Requires Authorization header: Bearer <token>
+     * @param authHeader session token from Authorization header
+     * @param request change password request
+     * @return AuthResponse indicating success or failure
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody ChangePasswordRequest request){
+        String token = extractBearerToken(authHeader);
+        authService.changePassword(token, request);
+
+        return ResponseEntity.ok(
+                AuthResponse.success("Password changed successfully")
+        );
+    }
+
+    /**
+     * Extract Bearer token from Authorization header
+     * @param authHeader Authorization header value
+     * @return extracted token
+     */
+    private String extractBearerToken(String authHeader) {
+        if (authHeader == null || authHeader.isBlank()) {
+            throw new InvalidAuthHeaderException("Authorization header is missing");
         }
+
+        if (!authHeader.startsWith("Bearer ")) {
+            throw new InvalidAuthHeaderException("Authorization header must start with 'Bearer '");
+        }
+
+        String token = authHeader.substring(7).trim();
+
+        if (token.isBlank()) {
+            throw new InvalidAuthHeaderException("Token is empty");
+        }
+
+        return token;
+    }
+
+    /**
+     * Convert User entity to UserDto
+     * @param user User entity
+     * @return UserResponse
+     */
+    public UserResponse toDto(User user) {
+        return new UserResponse(
+                user.getId(),
+                user.getEmail(),
+                user.getEmailVerified(),
+                user.getIsActive(),
+                user.getCreatedAt(),
+                user.getLastLoginAt()
+        );
     }
 }

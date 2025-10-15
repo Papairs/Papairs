@@ -1,4 +1,4 @@
-package com.papairs.auth.model;
+package com.papairs.auth.dto.response;
 
 public class ApiResponse {
     private String status;
@@ -11,6 +11,12 @@ public class ApiResponse {
         this.status = status;
         this.message = message;
         this.data = data;
+    }
+
+    public ApiResponse(String status, String message) {
+        this.status = status;
+        this.message = message;
+        this.data = null;
     }
 
     public String getStatus() {
