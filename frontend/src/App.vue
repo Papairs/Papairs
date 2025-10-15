@@ -1,14 +1,14 @@
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <nav class="bg-white shadow-lg">
+  <div class="min-h-screen bg-light-secondary">
+    <nav class="bg-light-bg shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
-            <h1 class="text-xl font-bold text-gray-800">Papairs</h1>
+            <h1 class="text-xl font-bold text-dark-text">Papairs</h1>
           </div>
           <div class="flex items-center space-x-4">
-            <router-link to="/" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md">Home</router-link>
-            <router-link to="/docs" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md">Docs</router-link>
+            <router-link to="/" class="text-light-text hover:text-dark-text px-3 py-2 rounded-md">Home</router-link>
+            <router-link to="/docs" class="text-light-text hover:text-dark-text px-3 py-2 rounded-md">Docs</router-link>
             <router-link to="/login" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Login</router-link>
           </div>
         </div>
