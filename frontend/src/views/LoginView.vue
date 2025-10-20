@@ -1,39 +1,65 @@
 <template>
-  <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-4 text-gray-900">Login</h1>
+  <div class="min-h-screen bg-gray-50 grid" :style="gridBg">
+  <div class="max-w-screen-2xl mx-auto px-12 py-16">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Left column: Sign in form -->
+        <div>
+          <h1 class="text-6xl font-extrabold text-gray-900 mb-6">Sign In<span class="text-orange-500">.</span></h1>
 
-    <form @submit.prevent="submit">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
-        <input v-model="email" type="email" required
-               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
-      </div>
+          <form @submit.prevent="submit" class="max-w-sm">
+            <div class="mb-6">
+              <label class="block text-gray-500 mb-2">Email <span class="text-gray-400">*</span></label>
+              <input v-model="email" type="email" required
+                     class="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black py-2 px-1 text-lg outline-none"/>
+            </div>
 
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
-        <input v-model="password" type="password" required
-               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
-      </div>
+            <div class="mb-4">
+              <label class="block text-gray-500 mb-2">Password <span class="text-gray-400">*</span></label>
+              <input v-model="password" type="password" required
+                     class="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-black py-2 px-1 text-lg outline-none"/>
+            </div>
 
-      <div class="flex items-center justify-between">
-        <button :disabled="loading" type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-          <span v-if="!loading">Sign in</span>
-          <span v-else>Signing in...</span>
-        </button>
-      </div>
+            <div class="flex items-center mt-6 mb-6">
+              <label class="inline-flex items-center">
+                <input type="checkbox" v-model="remember" class="form-checkbox h-5 w-5 text-black" />
+                <span class="ml-3 text-gray-700">Remember me</span>
+              </label>
+            </div>
 
-      <div v-if="error" class="mt-4 text-red-600">
-        {{ error }}
+            <div class="mb-6">
+              <a href="#" class="text-sm text-gray-700 font-medium">Password Help?</a>
+            </div>
+
+            <div class="mb-6">
+              <button :disabled="loading" type="submit"
+                      class="bg-black text-white rounded-md py-3 px-6 w-36 text-center font-semibold hover:opacity-90">
+                <span v-if="!loading">Sign In</span>
+                <span v-else>Signing in...</span>
+              </button>
+            </div>
+
+            <div class="text-sm text-gray-700">
+              Don't have an account? <br />
+              <a @click.prevent="$router.push('/register')" class="font-semibold underline">Create One Now</a>
+            </div>
+          </form>
+        </div>
+
+        <div class="flex justify-center lg:justify-end">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden w-full max-w-5xl transform translate-y-12 lg:translate-y-20">
+              <div class="p-8 bg-white">
+                <img :src="previewImg" alt="Papairs preview" class="w-full h-auto rounded-md"/>
+              </div>
+            </div>
+        </div>
       </div>
-      <div v-if="success" class="mt-4 text-green-600">
-        Logged in successfully (token saved)
-      </div>
-    </form>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import preview from '../../Images/Screenshot 2025-10-15 at 16.17.48.png'
 
 export default {
   name: 'LoginView',
@@ -41,9 +67,17 @@ export default {
     return {
       email: '',
       password: '',
+      remember: false,
       loading: false,
       error: null,
-      success: false
+      success: false,
+      // inline style for subtle grid background similar to screenshot
+      gridBg: {
+        backgroundImage: 'linear-gradient(to right, rgba(234,179,8,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(234,179,8,0.04) 1px, transparent 1px)',
+        backgroundSize: '80px 80px, 80px 80px'
+      }
+      ,
+      previewImg: preview
     }
   },
   methods: {
@@ -53,19 +87,16 @@ export default {
       this.loading = true
       try {
         const resp = await axios.post('http://localhost:8081/api/auth/login', {
-          email: this.email,
+          username: this.email,
           password: this.password
         })
 
-        // expect token in resp.data.token or resp.data.accessToken depending on backend
-        const token = resp.data?.sessionToken || null
+        const token = resp.data?.token || resp.data?.accessToken || resp.data?.sessionToken || null
         if (token) {
           localStorage.setItem('papairs_token', token)
           this.success = true
-          // redirect to home after short delay
           setTimeout(() => this.$router.push({ name: 'Home' }), 700)
         } else {
-          // show raw response if no token
           this.error = 'Login succeeded but no token returned.'
           console.warn('Login response:', resp.data)
         }
@@ -78,3 +109,8 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* minor tweaks to better match screenshot spacing */
+.form-checkbox { border: 1px solid #cbd5e1; }
+</style>
