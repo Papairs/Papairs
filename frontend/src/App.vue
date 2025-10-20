@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-light-secondary">
-    <nav class="bg-light-bg shadow-lg">
+    <nav v-if="$route.name !== 'Login'" class="bg-light-bg shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
@@ -14,10 +14,14 @@
         </div>
       </div>
     </nav>
-    
-    <main class="max-w-7xl mx-auto py-6 px-4">
+
+    <main v-if="$route.name !== 'Login'" class="max-w-7xl mx-auto py-6 px-4">
       <router-view /> 
     </main>
+
+    <div v-else>
+      <router-view />
+    </div>
   </div>
 </template>
 
