@@ -1,3 +1,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light mode colors */
+    --color-background: 255 255 255; /* Light background - FFFFFF */
+    --color-background-secondary: 243 243 243; /* Light Secondary - F3F3F3 */
+    --color-text: 42 42 42; /* Dark text - 2A2A2A */
+    --color-text-secondary: 184 184 184; /* Light text - B8B8B8 */
+    --color-border: 25 25 25; /* Light border - 191919 */
+    --color-border-opa: 25 25 25; /* Opa border - 191919 */
+  }
+  
+  .dark {
+    /* Dark mode colors */
+    --color-background: 25 25 25; /* Dark background - 191919 */
+    --color-background-secondary: 32 32 32; /* Dark secondary - 202020 */
+    --color-text: 240 254 237; /* White text - F0FEED */
+    --color-text-secondary: 184 184 184; /* Light text - B8B8B8 */
+    --color-border: 32 32 32; /* Dark border - 202020 */
+    --color-border-opa: 243 243 243; /* Dark opa border - F3F3F3 */
+  }
+}
