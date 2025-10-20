@@ -1,28 +1,53 @@
 <template>
   <div class="text-center">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Papairs</h1>
-    <p class="text-lg text-gray-600 mb-8">A simple Vue.js frontend with Spring Boot backends</p>
+    <h1 class="text-4xl font-bold text-content-primary dark:text-content-inverse mb-4 transition-colors">
+      Welcome to Papairs
+    </h1>
+    <p class="text-lg text-content-secondary mb-8 transition-colors">
+      A simple Vue.js frontend with Spring Boot backends
+    </p>
     
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Authentication Service</h2>
-        <p class="text-gray-600 mb-4">Handle user authentication and authorization</p>
-        <button @click="testAuth" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+
+      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
+        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
+          Authentication Service
+        </h2>
+        <p class="text-content-secondary mb-4 transition-colors">
+          Handle user authentication and authorization
+        </p>
+        <button 
+          @click="testAuth" 
+          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors"
+        >
           Test Auth Service
         </button>
-        <div v-if="authResult" class="mt-4 p-2 bg-gray-100 rounded">
-          <pre>{{ authResult }}</pre>
+        <div 
+          v-if="authResult" 
+          class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
+        >
+          <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ authResult }}</pre>
         </div>
       </div>
       
-      <div class="bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Documentation Service</h2>
-        <p class="text-gray-600 mb-4">Manage and serve documentation</p>
-        <button @click="testDocs" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+      <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
+        <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
+          Documentation Service
+        </h2>
+        <p class="text-content-secondary mb-4 transition-colors">
+          Manage and serve documentation
+        </p>
+        <button 
+          @click="testDocs" 
+          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors"
+        >
           Test Docs Service
         </button>
-        <div v-if="docsResult" class="mt-4 p-2 bg-gray-100 rounded">
-          <pre>{{ docsResult }}</pre>
+        <div 
+          v-if="docsResult" 
+          class="mt-4 p-2 bg-surface-light-secondary dark:bg-surface-dark rounded transition-colors"
+        >
+          <pre class="text-content-primary dark:text-content-inverse text-sm overflow-x-auto">{{ docsResult }}</pre>
         </div>
       </div>
     </div>
