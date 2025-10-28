@@ -1,7 +1,7 @@
 <template>
   <div class="w-[500px] p-2.5 flex-shrink-0">
     <div class="pt-12">
-      <h1 class="text-6xl lg:text-7xl font-extrabold text-content-primary mb-6">
+      <h1 class="text-6xl lg:text-7xl font-extrabold text-content-primary dark:text-content-inverse mb-6">
         Sign In<span class="text-accent">.</span>
       </h1>
 
@@ -54,7 +54,7 @@
 
         <div class="text-sm text-content-secondary">
           Don't have an account? <br />
-          <a @click.prevent="$emit('create-account')" class="font-semibold underline cursor-pointer text-content-primary">
+          <a @click.prevent="$emit('create-account')" class="font-semibold underline cursor-pointer text-content-primary dark:text-content-inverse">
             Create One Now
           </a>
         </div>
