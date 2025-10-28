@@ -83,6 +83,28 @@ services:
       timeout: 10s
       retries: 3
 
+  # ============================================
+  # AI SERVICE (Node.js + OpenAI)
+  # ============================================
+  ai-service:
+    build:
+      context: ./backend/ai-service
+      dockerfile: Dockerfile
+    container_name: papairs-ai-service
+    ports:
+      - "3001:3001"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    env_file:
+      - ./backend/ai-service/.env
+    environment:
+      - PORT=3001
+      - TZ=Europe/Copenhagen
+    networks:
+      - papairs-network
+    restart: unless-stopped
+
 # ============================================
 # NETWORKS
 # ============================================

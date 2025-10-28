@@ -21,6 +21,12 @@
             >
               Docs
             </router-link>
+            <router-link 
+              to="/autocomplete" 
+              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
+            >
+              Autocomplete
+            </router-link>
             
             <button 
               @click="toggleTheme"
