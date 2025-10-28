@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors">
-    <nav class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
+    <nav v-if="$route.name !== 'Login'" class="bg-surface-light dark:bg-surface-dark-secondary shadow-lg">
       <div class="max-w-7xl mx-auto px-4">
         <div class="flex justify-between h-16">
           <div class="flex items-center">
@@ -30,20 +30,24 @@
               {{ isDark ? '☀️' : '🌙' }}
             </button>
             
-            <button 
-              @click="login" 
+            <router-link 
+              to="/login" 
               class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded"
             >
               Login
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
     </nav>
-    
-    <main class="max-w-7xl mx-auto py-6 px-4">
-      <router-view />
+
+    <main v-if="$route.name !== 'Login'" class="max-w-7xl mx-auto py-6 px-4">
+      <router-view /> 
     </main>
+
+    <div v-else>
+      <router-view />
+    </div>
   </div>
 </template>
 
@@ -56,16 +60,4 @@ const { isDark, toggleTheme, initTheme } = useTheme();
 onMounted(() => {
   initTheme();
 });
-
-const login = async () => {
-  try {
-    const response = await this.$http.post('http://localhost:8081/api/auth/login', {
-      username: 'test',
-      password: 'test'
-    });
-    console.log('Login response:', response.data);
-  } catch (error) {
-    console.error('Login error:', error);
-  }
-};
 </script>

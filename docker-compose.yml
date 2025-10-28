@@ -13,10 +13,13 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - NODE_ENV=development
       - VITE_AUTH_SERVICE_URL=http://localhost:8081
       - VITE_DOCS_SERVICE_URL=http://localhost:8082
+      - TZ=Europe/Copenhagen
     depends_on:
       - auth-service
       - docs-service
@@ -35,12 +38,16 @@ services:
     container_name: papairs-auth-service
     ports:
       - "8081:8081"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     env_file:
       - ./backend/auth-service/.env
     environment:
       - SERVER_PORT=8081
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
       - SESSION_DURATION_HOURS=48
+      - TZ=Europe/Copenhagen
     networks:
       - papairs-network
     restart: unless-stopped
@@ -60,9 +67,13 @@ services:
     container_name: papairs-docs-service
     ports:
       - "8082:8082"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     environment:
       - SERVER_PORT=8082
       - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - TZ=Europe/Copenhagen
     networks:
       - papairs-network
     restart: unless-stopped
