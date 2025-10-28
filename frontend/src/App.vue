@@ -30,12 +30,12 @@
               {{ isDark ? '☀️' : '🌙' }}
             </button>
             
-            <button 
-              @click="login" 
+            <router-link 
+              to="/login" 
               class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded"
             >
               Login
-            </button>
+            </router-link>
           </div>
         </div>
       </div>
@@ -60,16 +60,4 @@ const { isDark, toggleTheme, initTheme } = useTheme();
 onMounted(() => {
   initTheme();
 });
-
-const login = async () => {
-  try {
-    const response = await this.$http.post('http://localhost:8081/api/auth/login', {
-      username: 'test',
-      password: 'test'
-    });
-    console.log('Login response:', response.data);
-  } catch (error) {
-    console.error('Login error:', error);
-  }
-};
 </script>
