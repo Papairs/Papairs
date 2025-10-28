@@ -33,14 +33,22 @@ app.post('/autocomplete', async (req, res) => {
     const completion = await openai.chat.completions.create({
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Complete this: ${userInput}` }
+        { role: 'user', content: userInput }
       ],
       model: 'gpt-4o',
       max_tokens: 30,
       temperature: 0.3,
     });
     
-    res.json({ suggestion: completion.choices[0].message.content });
+    let suggestionText = completion.choices[0].message.content.trim();
+    
+    // Remove surrounding quotes if present
+    if ((suggestionText.startsWith('"') && suggestionText.endsWith('"')) ||
+        (suggestionText.startsWith("'") && suggestionText.endsWith("'"))) {
+      suggestionText = suggestionText.slice(1, -1).trim();
+    }
+    
+    res.json({ suggestion: suggestionText });
   } catch (error) {
     console.error('Error fetching autocompletion:', error);
     res.status(500).json({ error: 'Failed to fetch autocompletion' });
