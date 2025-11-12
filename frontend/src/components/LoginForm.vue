@@ -1,7 +1,7 @@
 <template>
   <div class="w-[500px] p-2.5 flex-shrink-0">
     <div class="pt-12">
-      <h1 class="text-6xl lg:text-7xl font-extrabold text-content-primary dark:text-content-inverse mb-6">
+      <h1 class="text-6xl lg:text-7xl font-extrabold text-content-primary dark:text-content-inverse mb-12">
         Sign In<span class="text-accent">.</span>
       </h1>
 
@@ -12,7 +12,7 @@
             v-model="formData.email" 
             type="email" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle dark:border-content-secondary focus:border-content-primary dark:focus:border-accent px-1 text-xl outline-none text-content-primary dark:text-content-inverse placeholder-content-secondary"
           />
         </div>
 
@@ -22,7 +22,7 @@
             v-model="formData.password" 
             type="password" 
             required
-            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle focus:border-content-primary py-2 px-1 text-xl s outline-none text-content-primary placeholder-content-secondary"
+            class="w-full bg-transparent border-0 border-b-2 border-border-light-subtle dark:border-content-secondary focus:border-content-primary dark:focus:border-accent py-2 px-1 text-xl outline-none text-content-primary dark:text-content-inverse placeholder-content-secondary"
           />
         </div>
 
@@ -45,7 +45,7 @@
           <button 
             :disabled="loading" 
             type="submit"
-            class="bg-content-black text-content-inverse rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
+            class="bg-content-black dark:bg-content-inverse text-content-inverse dark:text-content-primary rounded-md py-3 px-6 w-40 text-center font-semibold hover:opacity-90 disabled:opacity-60"
           >
             <span v-if="!loading">Sign In</span>
             <span v-else>Signing in...</span>
