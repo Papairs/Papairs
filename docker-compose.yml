@@ -20,10 +20,6 @@ services:
       - VITE_AUTH_SERVICE_URL=http://localhost:8081
       - VITE_DOCS_SERVICE_URL=http://localhost:8082
       - TZ=Europe/Copenhagen
-      - CHOKIDAR_USEPOLLING=true
-      - WATCHPACK_POLLING=true
-      - WDS_SOCKET_HOST=localhost
-      - WDS_SOCKET_PORT=3000
     depends_on:
       - auth-service
       - docs-service
@@ -71,8 +67,6 @@ services:
     container_name: papairs-docs-service
     ports:
       - "8082:8082"
-    env_file:
-      - ./backend/docs-service/.env
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro

@@ -21,7 +21,7 @@ module.exports = {
         content: {
           primary: '#2A2A2A',
           secondary: '#B8B8B8',
-          inverse: '#F0EFED',
+          inverse: '#F0FEED',
           black: '#000000',
         },
         

@@ -77,13 +77,11 @@ Double-click `start-all.bat` or run in PowerShell:
 - Port: 8082
 - Endpoints:
   - `GET /api/docs/health` - Health check
-  - `GET /api/docs/pages` - Get all accessible pages
-  - `GET /api/docs/pages/{pageId}` - Get specific page
-  - `POST /api/docs/pages` - Create new page
-  - `PUT /api/docs/pages/{pageId}` - Update page content
-  - `PATCH /api/docs/pages/{pageId}` - Rename page
-  - `PATCH /api/docs/pages/{pageId}/move` - Move page to folder
-  - `DELETE /api/docs/pages/{pageId}` - Delete page
+  - `GET /api/docs/all` - Get all documents
+  - `GET /api/docs/{id}` - Get specific document
+  - `POST /api/docs` - Create new document
+  - `PUT /api/docs/{id}` - Update document
+  - `DELETE /api/docs/{id}` - Delete document
 
 ## Development
 
