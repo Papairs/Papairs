@@ -194,55 +194,6 @@
 
       <div class="bg-surface-light dark:bg-surface-dark-secondary p-6 rounded-lg shadow-md transition-colors">
         <h2 class="text-2xl font-semibold text-content-primary dark:text-content-inverse mb-4 transition-colors">
-          Autocomplete test
-        </h2>
-        <p class="text-content-secondary mb-4 transition-colors">
-          Test page, showing autocomplete functionality.
-        </p>
-        <router-link 
-          to="/autocomplete" 
-          class="bg-accent hover:bg-[#E66900] text-content-inverse font-bold py-2 px-4 rounded transition-colors inline-block"
-        >
-          Autocomplete Test
-        </router-link>
-      </div>
-
-
-    </div>
-  </div>
-</template>
-
-<script>
-import axios from 'axios'
-
-export default {
-  name: 'HomeView',
-  data() {
-    return {
-      authResult: null,
-      docsResult: null
-    }
-  },
-  methods: {
-    async testAuth() {
-      try {
-        const response = await axios.get('http://localhost:8081/api/auth/health');
-        this.authResult = JSON.stringify(response.data, null, 2);
-      } catch (error) {
-        this.authResult = `Error: ${error.message}`;
-      }
-    },
-    async testDocs() {
-      try {
-        const response = await axios.get('http://localhost:8082/api/docs/health');
-        this.docsResult = JSON.stringify(response.data, null, 2);
-      } catch (error) {
-        this.docsResult = `Error: ${error.message}`;
-      }
-    },
-  }
-}
-</script>
           Create New Page
         </h2>
         <p class="text-content-secondary mb-4 transition-colors">
