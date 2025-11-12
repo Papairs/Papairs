@@ -11,8 +11,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/index.html:/app/index.html
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
@@ -29,7 +30,7 @@ services:
       - docs-service
     networks:
       - papairs-network
-    command: npm run serve
+    command: npm run dev
     restart: unless-stopped
 
   # ============================================
@@ -106,6 +107,28 @@ services:
       - ./backend/ai-service/.env
     environment:
       - PORT=3001
+      - TZ=Europe/Copenhagen
+    networks:
+      - papairs-network
+    restart: unless-stopped
+    stop_grace_period: 5s
+
+  # ============================================
+  # COLLABORATION SERVICE (Node.js + Hocuspocus)
+  # ============================================
+  collab-service:
+    build:
+      context: ./backend/collab-service
+      dockerfile: Dockerfile
+    container_name: papairs-collab-service
+    ports:
+      - "3004:3004"  # WebSocket port
+      - "3005:3005"  # HTTP API port
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - PORT=3004
       - TZ=Europe/Copenhagen
     networks:
       - papairs-network

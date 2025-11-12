@@ -1,4 +1,4 @@
-# Development stage for Vue.js frontend
+# Development stage for Vue.js frontend with Vite
 FROM node:18-alpine
 
 WORKDIR /app
@@ -15,5 +15,5 @@ COPY . .
 # Expose port 3000
 EXPOSE 3000
 
-# Start development server
-CMD ["npm", "run", "serve"]
+# Start Vite development server using npx to avoid path issues
+CMD ["npx", "vite", "--host", "0.0.0.0", "--port", "3000"]
