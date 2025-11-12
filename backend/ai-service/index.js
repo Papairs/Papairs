@@ -160,6 +160,26 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`AI Service is running on http://localhost:${port}`);
 });
+
+// Graceful shutdown handler
+function gracefulShutdown(signal) {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  server.close(() => {
+    console.log('HTTP server closed');
+    process.exit(0);
+  });
+
+  // Force shutdown after 5 seconds if graceful shutdown fails
+  setTimeout(() => {
+    console.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 5000);
+}
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

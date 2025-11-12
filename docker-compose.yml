@@ -110,6 +110,7 @@ services:
     networks:
       - papairs-network
     restart: unless-stopped
+    stop_grace_period: 5s
 
 # ============================================
 # NETWORKS
