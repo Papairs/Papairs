@@ -2,10 +2,10 @@
   "name": "papairs-collab-service",
   "version": "1.0.0",
   "description": "Real-time collaboration service for Papairs using Tiptap Collaboration",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -13,6 +13,9 @@
     "ws": "^8.14.2",
     "@hocuspocus/server": "^2.11.1",
     "@hocuspocus/extension-logger": "^2.11.1",
+    "@hocuspocus/transformer": "^2.11.1",
+    "yjs": "^13.6.10",
+    "axios": "^1.6.0",
     "dotenv": "^16.3.1"
   },
   "devDependencies": {

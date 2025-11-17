@@ -11,8 +11,8 @@ RUN npm install --production
 # Copy application files
 COPY . .
 
-# Expose port for WebSocket
-EXPOSE 3004
+# Expose ports for WebSocket and HTTP API
+EXPOSE 3004 3005
 
 # Start the service
-CMD ["node", "index.js"]
+CMD ["node", "src/index.js"]

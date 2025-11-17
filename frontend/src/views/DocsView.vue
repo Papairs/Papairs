@@ -1,6 +1,7 @@
 <script>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { useRoute } from 'vue-router'
 import StarterKit from '@tiptap/starter-kit'
 import Collaboration from '@tiptap/extension-collaboration'
 import TextAlign from '@tiptap/extension-text-align'
@@ -12,6 +13,7 @@ import Highlight from '@tiptap/extension-highlight'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 import * as Y from 'yjs'
 import SidebarBase from '@/components/SidebarBase.vue'
+import { auth } from '@/utils/auth.js'
 
 export default {
   name: 'DocsView',
@@ -20,9 +22,16 @@ export default {
     EditorContent 
   },
   setup() {
+    const route = useRoute()
     const provider = ref(null)
     const connectionStatus = ref('disconnected')
     const connectedUsers = ref(0)
+
+    // Get document ID from route params or default to 'document-1'
+    const documentId = computed(() => route.params.id || route.query.id || 'document-1')
+    
+    // Get current user ID for collaboration
+    const userId = auth.getUserId() || 'anonymous-user'
 
     // Create Y.js document
     const ydoc = new Y.Doc()
@@ -31,9 +40,7 @@ export default {
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
-          // Disable history because Collaboration extension has its own
-          history: false,
-          // Also disable dropcursor to avoid conflicts
+          history: false, // Collaboration extension has its own history
         }),
         Collaboration.configure({
           document: ydoc,
@@ -55,12 +62,6 @@ export default {
           style: 'min-height: 100vh;',
         },
       },
-      onCreate: ({ editor }) => {
-        console.log('Editor created:', editor)
-      },
-      onUpdate: () => {
-        console.log('Editor updated')
-      },
     })
 
     onMounted(() => {
@@ -72,43 +73,69 @@ export default {
       
       provider.value = new HocuspocusProvider({
         url: wsUrl,
-        name: 'document-1',
+        name: documentId.value, // Use actual document ID
         document: ydoc,
-        token: 'anonymous-token', // Send a token to satisfy the provider requirement
+        token: userId, // Send user ID as token
         onStatus: ({ status }) => {
           connectionStatus.value = status
-          console.log('Connection status:', status)
-        },
-        onSynced: () => {
-          console.log('Document synced')
-        },
-        onConnect: () => {
-          console.log('✅ Connected to collaboration server')
-        },
-        onDisconnect: ({ event }) => {
-          console.log('❌ Disconnected from collaboration server', event)
-        },
-        onClose: ({ event }) => {
-          console.log('WebSocket closed', event)
-        },
-        onOpen: () => {
-          console.log('✅ WebSocket connection opened')
+          
+          // When connected, check if we need to load initial content
+          if (status === 'connected') {
+            loadInitialContentIfNeeded()
+          }
         },
       })
+
+      // Load initial content when provider is ready and document is empty
+      const loadInitialContentIfNeeded = async () => {
+        // Wait a bit for any existing content to sync
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Check if editor is empty (only has empty paragraph)
+        if (editor.value) {
+          const content = editor.value.getHTML()
+          console.log('🔍 Current editor content:', content)
+          
+          // If content is effectively empty, try to load from API
+          if (!content || content === '<p></p>' || content.trim() === '') {
+            console.log('📄 Editor is empty, attempting to load initial content')
+            
+            try {
+              const response = await fetch(`http://localhost:3005/api/documents/${documentId.value}/initial-content`, {
+                headers: {
+                  'X-User-Id': userId
+                }
+              })
+              
+              if (response.ok) {
+                const data = await response.json()
+                if (data.content && data.content.trim() !== '' && data.content !== '<p></p>') {
+                  console.log('✅ Loading initial content:', data.content)
+                  
+                  // Set the content in TipTap editor
+                  editor.value.commands.setContent(data.content)
+                  
+                  console.log('🔄 Initial content loaded successfully')
+                } else {
+                  console.log('📄 No initial content available')
+                }
+              } else {
+                console.warn('⚠️ Failed to load initial content:', response.status)
+              }
+            } catch (error) {
+              console.error('❌ Error loading initial content:', error)
+            }
+          } else {
+            console.log('✅ Editor already has content, skipping initial load')
+          }
+        }
+      }
 
       // Update connected users count
       provider.value.on('awarenessUpdate', () => {
         const states = provider.value.awareness?.getStates()
         connectedUsers.value = states ? states.size : 0
-        console.log('Connected users:', connectedUsers.value)
       })
-      
-      // Trigger initial count
-      setTimeout(() => {
-        const states = provider.value.awareness?.getStates()
-        connectedUsers.value = states ? states.size : 0
-        console.log('Initial connected users:', connectedUsers.value)
-      }, 1000)
     })
 
     onBeforeUnmount(() => {
