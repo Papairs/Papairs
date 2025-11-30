@@ -1,5 +1,4 @@
 <script>
-import SidebarBase from '@/components/SidebarBase.vue'
 import TiptapEditor from '@/components/TiptapEditor.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
@@ -9,7 +8,6 @@ import { createDocumentWebSocketService } from '@/services/documentWebSocketServ
 export default {
   name: 'DocsView',
   components: { 
-    SidebarBase,
     TiptapEditor
   },
   props: {
@@ -119,6 +117,7 @@ export default {
         }
       })
     }
+    
 
     const handleEditorReady = (editorInstance) => {
       editor.value = editorInstance
@@ -164,12 +163,12 @@ export default {
     }
   }
 }
+
 </script>
 
 
 <template>
-  <div class="flex flex-row h-screen w-screen bg-surface-light overflow-hidden">
-    <SidebarBase />
+  <div class="flex flex-row h-screen w-full bg-surface-light overflow-hidden">
     <div class="flex flex-col h-full w-full overflow-hidden">
       <!-- Top Header -->
       <div class="flex flex-row h-[50px] w-full border-b-2 border-accent flex-shrink-0 items-center px-4">

@@ -13,6 +13,11 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    @Transactional(readOnly = true)
+    public boolean userExists(String userId) {
+        return userRepository.existsByUserId(userId);
+    }
+
     @Transactional
     public User createUser(String userId) {
         User user = new User();

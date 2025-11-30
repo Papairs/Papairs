@@ -35,29 +35,6 @@ public class GatewayConfig {
     @Bean
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
-                .route("auth-health", r -> r
-                        .path("/api/auth/health")
-                        .filters(f -> f
-                                .removeRequestHeader("Origin")
-                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
-                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
-                                .circuitBreaker(config -> config
-                                        .setName(CircuitBreakerNames.AUTH_SERVICE)
-                                        .setFallbackUri("forward:/fallback/auth-service"))
-                        )
-                        .uri(serviceProperties.authService().url()))
-
-                .route("docs-health", r -> r
-                        .path("/api/docs/health")
-                        .filters(f -> f
-                                .removeRequestHeader("Origin")
-                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
-                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
-                                .circuitBreaker(config -> config
-                                        .setName(CircuitBreakerNames.DOCS_SERVICE)
-                                        .setFallbackUri("forward:/fallback/docs-service"))
-                        )
-                        .uri(serviceProperties.docsService().url()))
 
                 .route("auth-login", r -> r
                         .path("/api/auth/login")

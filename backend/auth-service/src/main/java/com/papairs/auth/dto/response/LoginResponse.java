@@ -1,22 +1,10 @@
 package com.papairs.auth.dto.response;
 
-import com.papairs.auth.model.Session;
-import com.papairs.auth.model.User;
+import java.time.LocalDateTime;
 
-public class LoginResponse {
-    private Session session;
-    private User user;
-
-    public LoginResponse(Session session, User user) {
-        this.session = session;
-        this.user = user;
-    }
-
-    public Session getSession() {
-        return session;
-    }
-
-    public User getUser() {
-        return user;
-    }
-}
+public record LoginResponse(
+        String token,
+        String sessionId,
+        LocalDateTime expiresAt,
+        UserResponse user
+) {}

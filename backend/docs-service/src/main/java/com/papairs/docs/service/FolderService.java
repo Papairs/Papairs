@@ -1,14 +1,18 @@
 package com.papairs.docs.service;
 
+import com.papairs.docs.dto.response.FolderResponse;
+import com.papairs.docs.dto.response.FolderTreeResponse;
+import com.papairs.docs.dto.response.NavigationItemResponse;
 import com.papairs.docs.exception.InvalidRequestException;
 import com.papairs.docs.exception.ResourceConflictException;
 import com.papairs.docs.exception.ResourceNotFoundException;
 import com.papairs.docs.model.Folder;
-import com.papairs.docs.model.FolderTree;
 import com.papairs.docs.repository.FolderRepository;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
+import com.papairs.docs.model.Page;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,10 +38,10 @@ public class FolderService {
      * @param name The name for the new folder
      * @param ownerId The ID of the user who will own the folder
      * @param parentFolderId The ID of the parent folder. Can be {@code null} to create a root folder.
-     * @return The newly created {@link Folder} entity
+     * @return The newly created {@link FolderResponse}
      */
     @Transactional
-    public Folder createFolder(String name, String ownerId, String parentFolderId) {
+    public FolderResponse createFolder(String name, String ownerId, String parentFolderId) {
         if (parentFolderId != null) {
             permissionService.requireFolderAccess(parentFolderId, ownerId);
         }
@@ -47,21 +51,24 @@ public class FolderService {
         folder.setOwnerId(ownerId);
         folder.setParentFolderId(parentFolderId);
 
-        return folderRepository.save(folder);
+        Folder saved = folderRepository.save(folder);
+        return FolderResponse.of(saved);
     }
 
     /**
      * Retrieves a single folder by its ID by ensuring the user has access
      * @param folderId The ID of the folder to retrieve
      * @param userId The ID of the user making the request
-     * @return The requested {@link Folder} entity
+     * @return The requested {@link FolderResponse}
      * @throws ResourceNotFoundException if the folder is not found
      */
-    public Folder getFolder(String folderId, String userId) {
+    public FolderResponse getFolder(String folderId, String userId) {
         permissionService.requireFolderAccess(folderId, userId);
 
-        return folderRepository.findById(folderId)
+        Folder folder = folderRepository.findById(folderId)
             .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
+        
+        return FolderResponse.of(folder);
     }
 
     /**
@@ -69,15 +76,19 @@ public class FolderService {
      * @param folderId The ID of the folder to rename
      * @param userId The ID of the user performing the action.
      * @param newName The new name for the folder
-     * @return The updated {@link Folder} entity
+     * @return The updated {@link FolderResponse}
      * @throws ResourceNotFoundException if the folder is not found
      */
     @Transactional
-    public Folder renameFolder(String folderId, String userId, String newName) {
-        Folder folder = getFolder(folderId, userId);
+    public FolderResponse renameFolder(String folderId, String userId, String newName) {
+        permissionService.requireFolderAccess(folderId, userId);
+        
+        Folder folder = folderRepository.findById(folderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
         folder.setName(newName);
 
-        return folderRepository.save(folder);
+        Folder saved = folderRepository.save(folder);
+        return FolderResponse.of(saved);
     }
 
     /**
@@ -111,30 +122,39 @@ public class FolderService {
     /**
      * Retrieves all root-level folders for a given user
      * @param userId The ID of the user
-     * @return A {@link List} of root {@link Folder} entities
+     * @return A {@link List} of root {@link FolderResponse}
      */
-    public List<Folder> getRootFolders(String userId) {
-        return folderRepository.findByOwnerIdAndParentFolderIdIsNull(userId);
+    public List<FolderResponse> getRootFolders(String userId) {
+        List<Folder> folders = folderRepository.findByOwnerIdAndParentFolderIdIsNull(userId);
+        return folders.stream()
+            .map(FolderResponse::of)
+            .collect(Collectors.toList());
     }
 
     /**
      * Get all folders for a user
      * @param userId The ID of the user
-     * @return A {@link List} of child {@link Folder} entities
+     * @return A {@link List} of {@link FolderResponse}
      */
-    public List<Folder> getAllUserFolders(String userId) {
-        return folderRepository.findByOwnerId(userId);
+    public List<FolderResponse> getAllUserFolders(String userId) {
+        List<Folder> folders = folderRepository.findByOwnerId(userId);
+        return folders.stream()
+            .map(FolderResponse::of)
+            .collect(Collectors.toList());
     }
 
     /**
      * Retrieves all direct child folders of a given parent folder
      * @param folderId The ID of the parent folder
      * @param userId The ID of the user requesting the children
-     * @return A {@link List} of child {@link Folder} entities
+     * @return A {@link List} of child {@link FolderResponse}
      */
-    public List<Folder> getChildFolders(String folderId, String userId) {
+    public List<FolderResponse> getChildFolders(String folderId, String userId) {
         permissionService.requireFolderAccess(folderId, userId);
-        return folderRepository.findByParentFolderId(folderId);
+        List<Folder> children = folderRepository.findByParentFolderId(folderId);
+        return children.stream()
+            .map(FolderResponse::of)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -143,10 +163,10 @@ public class FolderService {
      * then builds the tree in memory without additional database calls.
      * @param folderId folder ID
      * @param userId user ID
-     * @return FolderTree structure
+     * @return FolderTreeResponse structure
      * @throws ResourceNotFoundException if the folder does not exist
      */
-    public FolderTree getFolderTree(String folderId, String userId) {
+    public FolderTreeResponse getFolderTree(String folderId, String userId) {
         permissionService.requireFolderAccess(folderId, userId);
 
         // Get folder and descendants
@@ -172,86 +192,63 @@ public class FolderService {
 
         // Get page counts for all relevant folders in another single batch query.
         Map<String, Long> pageCountMap = contentService.getPageCountsForFolders(allFolderIds);
+        
+        // Get pages for all folders
+        Map<String, List<Page>> pagesByFolderId = contentService.getPagesForFolders(allFolderIds);
 
         // Build and return the tree structure recursively in memory.
-        return buildFolderTree(rootFolder, childrenMap, pageCountMap);
-    }
-
-    /**
-     * Build folder tree recursively using pre-fetched data
-     * No database queries - uses in-memory maps
-     * @param folder folder entity
-     * @param childrenMap map of parent folder ID to list of child folders
-     * @param pageCountMap map of folder ID to page count
-     * @return FolderTree structure
-     */
-    private FolderTree buildFolderTree(
-            Folder folder,
-            Map<String, List<Folder>> childrenMap,
-            Map<String, Long> pageCountMap
-    ) {
-        FolderTree tree = new FolderTree();
-
-        tree.setFolderId(folder.getFolderId());
-        tree.setName(folder.getName());
-        tree.setCreatedAt(folder.getCreatedAt());
-
-        // Get page count from pre-fetched map
-        long pageCount = pageCountMap.getOrDefault(folder.getFolderId(), 0L);
-        tree.setPageCount(pageCount);
-
-        // Get children from pre-fetched map
-        List<Folder> children = childrenMap.getOrDefault(folder.getFolderId(), new ArrayList<>());
-        List<FolderTree> childTrees = new ArrayList<>();
-
-        for (Folder child : children) {
-            childTrees.add(buildFolderTree(child, childrenMap, pageCountMap));
-        }
-
-        tree.setChildren(childTrees);
-        tree.setChildCount(childTrees.size());
-
-        return tree;
+        return buildFolderTreeResponse(rootFolder, childrenMap, pageCountMap, pagesByFolderId);
     }
 
     /**
      * Constructs and retrieves the entire hierarchical tree of all folders owned by a user.
      * @param userId The ID of the user.
-     * @return A {@link List} of {@link FolderTree} objects, one for each root folder.
+     * @return A {@link List} of {@link FolderTreeResponse} objects, one for each root folder.
      */
-    public List<FolderTree> getUserFolderTrees(String userId) {
+     public List<FolderTreeResponse> getUserFolderTrees(String userId) {
         List<Folder> allFolders = folderRepository.findByOwnerId(userId);
         if (CollectionUtils.isEmpty(allFolders)) {
             return Collections.emptyList();
         }
-
+    
         List<Folder> rootFolders = allFolders.stream()
             .filter(f -> f.getParentFolderId() == null)
             .collect(Collectors.toList());
-
+    
         Map<String, List<Folder>> childrenMap = allFolders.stream()
             .filter(f -> f.getParentFolderId() != null)
             .collect(Collectors.groupingBy(Folder::getParentFolderId));
-
-        List<String> folderIds = allFolders.stream().map(Folder::getFolderId).collect(Collectors.toList());
+    
+        List<String> folderIds = allFolders.stream()
+            .map(Folder::getFolderId)
+            .collect(Collectors.toList());
+    
         Map<String, Long> pageCountMap = contentService.getPageCountsForFolders(folderIds);
+    
+        Map<String, List<Page>> pagesByFolderId =
+            contentService.getPagesForFolders(folderIds);
 
+        // Use buildFolderTreeResponse instead of buildFolderTree
         return rootFolders.stream()
-            .map(root -> buildFolderTree(root, childrenMap, pageCountMap))
+            .map(root -> buildFolderTreeResponse(root, childrenMap, pageCountMap, pagesByFolderId))
             .collect(Collectors.toList());
     }
+    
 
     /**
      * Move a folder to a new parent folder
      * @param folderId folder ID
      * @param userId user ID
      * @param newParentFolderId new parent folder ID
-     * @return Updated Folder entity
+     * @return Updated {@link FolderResponse}
      * @throws InvalidRequestException if attempting to move a folder into itself or its descendants
      */
     @Transactional
-    public Folder moveFolder(String folderId, String userId, String newParentFolderId) {
-        Folder folderToMove = getFolder(folderId, userId);
+    public FolderResponse moveFolder(String folderId, String userId, String newParentFolderId) {
+        permissionService.requireFolderAccess(folderId, userId);
+        
+        Folder folderToMove = folderRepository.findById(folderId)
+            .orElseThrow(() -> new ResourceNotFoundException("Folder not found"));
 
         if (newParentFolderId != null) {
             permissionService.requireFolderAccess(newParentFolderId, userId);
@@ -267,19 +264,62 @@ public class FolderService {
         }
 
         folderToMove.setParentFolderId(newParentFolderId);
-        return folderRepository.save(folderToMove);
+        Folder saved = folderRepository.save(folderToMove);
+        return FolderResponse.of(saved);
     }
 
     /**
      * Retrieves the ancestor path from the root down to the specified folder
      * @param folderId The ID of the target folder
      * @param userId The ID of the user making the request
-     * @return A {@link List} of {@link Folder} entities representing the path, ordered from root to target
+     * @return A {@link List} of {@link FolderResponse} representing the path, ordered from root to target
      */
-    public List<Folder> getFolderPath(String folderId, String userId) {
+    public List<FolderResponse> getFolderPath(String folderId, String userId) {
         permissionService.requireFolderAccess(folderId, userId);
         List<Folder> path = folderRepository.findAncestorPath(folderId);
         Collections.reverse(path); // Reverse to get root -> target order
-        return path;
+        return path.stream()
+            .map(FolderResponse::of)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Build folder tree recursively using pre-fetched data
+     * No database queries - uses in-memory maps
+     * @param folder folder entity
+     * @param childrenMap map of parent folder ID to list of child folders
+     * @param pageCountMap map of folder ID to page count
+     * @param pagesByFolderId map of folder ID to list of pages
+     * @return {@link FolderTreeResponse}
+     */
+    private FolderTreeResponse buildFolderTreeResponse(
+        Folder folder,
+        Map<String, List<Folder>> childrenMap,
+        Map<String, Long> pageCountMap,
+        Map<String, List<Page>> pagesByFolderId
+    ) {
+        // Add documents by mapping Pages to NavigationItemResponse
+        List<Page> pages = pagesByFolderId.getOrDefault(folder.getFolderId(), Collections.emptyList());
+        List<NavigationItemResponse> documents = pages.stream()
+                .map(NavigationItemResponse::from)
+                .collect(Collectors.toList());
+
+        // Build children recursively
+        List<Folder> children = childrenMap.getOrDefault(folder.getFolderId(), new ArrayList<>());
+        List<FolderTreeResponse> childResponses = new ArrayList<>();
+
+        for (Folder child : children) {
+            childResponses.add(buildFolderTreeResponse(child, childrenMap, pageCountMap, pagesByFolderId));
+        }
+
+        return new FolderTreeResponse(
+                folder.getFolderId(),
+                folder.getName(),
+                folder.getCreatedAt(),
+                pageCountMap.getOrDefault(folder.getFolderId(), 0L),
+                childResponses.size(),
+                childResponses,
+                documents
+        );
     }
 }

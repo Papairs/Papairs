@@ -1,7 +1,9 @@
 package com.papairs.auth.service;
 
+import com.papairs.auth.dto.response.SessionCreationResult;
 import com.papairs.auth.model.Session;
 import com.papairs.auth.repository.SessionRepository;
+import com.papairs.auth.security.TokenHasher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,9 +21,11 @@ public class SessionService {
     private int sessionDurationHours;
     private final SessionRepository sessionRepository;
     private final SecureRandom secureRandom;
+    private final TokenHasher tokenHasher;
 
-    public SessionService(SessionRepository sessionRepository) {
+    public SessionService(SessionRepository sessionRepository, TokenHasher tokenHasher) {
         this.sessionRepository = sessionRepository;
+        this.tokenHasher = tokenHasher;
         this.secureRandom = new SecureRandom();
     }
 
@@ -31,27 +35,37 @@ public class SessionService {
      * @return Session entity
      */
     @Transactional
-    public Session createSession(String userId) {
+    public SessionCreationResult createSession(String userId) {
+        String plaintextToken = generateSecureToken();
+        String tokenHash = tokenHasher.hash(plaintextToken);
+
         Session session = new Session();
         session.setId(UUID.randomUUID().toString());
         session.setUserId(userId);
-        session.setToken(generateSecureToken());
+        session.setToken(tokenHash);
         session.setExpiresAt(LocalDateTime.now().plusHours(sessionDurationHours));
         session.setCreatedAt(LocalDateTime.now());
         session.setLastActiveAt(LocalDateTime.now());
 
         sessionRepository.save(session);
 
-        return session;
+        return new SessionCreationResult(
+                session.getId(),
+                session.getUserId(),
+                plaintextToken,
+                session.getExpiresAt(),
+                session.getCreatedAt()
+        );
     }
 
     /**
      * Find a session by its token
+     * Hashes the incoming plaintext token and looks up by hash
      * @param token session token
      * @return Optional<Session> if found, else empty
      */
     public Optional<Session> findByToken(String token) {
-        return sessionRepository.findByToken(token);
+        return sessionRepository.findByToken(tokenHasher.hash(token));
     }
 
     /**
@@ -82,7 +96,7 @@ public class SessionService {
      */
     @Transactional
     public void deleteByToken(String token) {
-        sessionRepository.deleteByToken(token);
+        sessionRepository.deleteByToken(tokenHasher.hash(token));
     }
 
     /**
@@ -96,13 +110,11 @@ public class SessionService {
 
     /**
      * Delete all user sessions
-     * TODO: Consider security implications
      * @param userId user ID
-     * @return number of sessions deleted
      */
     @Transactional
-    public int deleteAllUserSessions(String userId) {
-        return sessionRepository.deleteByUserId(userId);
+    public void deleteAllUserSessions(String userId) {
+        sessionRepository.deleteByUserId(userId);
     }
 
     /**

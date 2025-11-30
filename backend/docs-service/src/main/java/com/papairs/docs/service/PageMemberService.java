@@ -15,10 +15,12 @@ import java.util.stream.Collectors;
 public class PageMemberService {
     private final PageMemberRepository pageMemberRepository;
     private final PermissionService permissionService;
+    private final UserService userService;
 
-    public PageMemberService(PageMemberRepository pageMemberRepository, PermissionService permissionService) {
+    public PageMemberService(PageMemberRepository pageMemberRepository, PermissionService permissionService, UserService userService) {
         this.pageMemberRepository = pageMemberRepository;
         this.permissionService = permissionService;
+        this.userService = userService;
     }
 
     /**
@@ -39,6 +41,10 @@ public class PageMemberService {
             MemberRole role
     ) {
         permissionService.requireMemberManagement(pageId, requestingUserId);
+
+        if (!userService.userExists(targetUserId)) {
+            throw new ResourceNotFoundException("Target user does not exist");
+        }
 
         if (permissionService.isOwner(pageId, targetUserId)) {
             throw new InvalidRequestException("Cannot add owner as member");
@@ -71,6 +77,10 @@ public class PageMemberService {
     ) {
         permissionService.requireMemberManagement(pageId, requestingUserId);
 
+        if (!userService.userExists(targetUserId)) {
+            throw new ResourceNotFoundException("Target user does not exist");
+        }
+
         PageMember member = pageMemberRepository.findByPageIdAndUserId(pageId, targetUserId)
             .orElseThrow(() -> new ResourceNotFoundException("Member not found"));
 
@@ -93,6 +103,10 @@ public class PageMemberService {
             String targetUserId
     ) {
         permissionService.requireMemberManagement(pageId, requestingUserId);
+
+        if (!userService.userExists(targetUserId)) {
+            throw new ResourceNotFoundException("Target user does not exist");
+        }
 
         PageMember memberToRemove = pageMemberRepository.findByPageIdAndUserId(pageId, targetUserId)
             .orElseThrow(() -> new ResourceNotFoundException("Member not found"));

@@ -6,13 +6,14 @@ import { BaseApiController } from './BaseApiController.js';
  */
 export class DocsController extends BaseApiController {
   constructor() {
-    super('http://localhost:8080/api/docs');
+    super('http://localhost:8080');
+    this.servicePath = '/api/docs';
   }
 
   /**
    * Check service health
    */
   async checkHealth() {
-    return this.get('/health');
+    return this.get('/actuator/health/services/docsService');
   }
 }

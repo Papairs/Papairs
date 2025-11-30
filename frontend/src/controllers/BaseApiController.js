@@ -46,9 +46,12 @@ export class BaseApiController {
 
   /**
    * Generic HTTP request method
+   * Removes trailing slashes from baseURL and ensures single slash between baseURL and endpoint
    */
   async makeRequest(method, endpoint, data = null, additionalHeaders = {}) {
-    const url = `${this.baseURL}${endpoint}`;
+    const cleanBase = this.baseURL.replace(/\/$/, '');
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${cleanBase}${cleanEndpoint}`;
     const headers = this.getHeaders(additionalHeaders);
 
     const config = {

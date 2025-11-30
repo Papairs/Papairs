@@ -1,6 +1,7 @@
 package com.papairs.orchestration.service;
 
 import com.papairs.orchestration.client.AuthServiceClient;
+import com.papairs.orchestration.dto.response.ValidationResponse;
 import com.papairs.orchestration.exception.ServiceUnavailableException;
 import org.springframework.cloud.gateway.support.TimeoutException;
 import org.springframework.stereotype.Service;
@@ -28,7 +29,7 @@ public class TokenValidationService {
      */
     public Mono<String> validateTokenAndGetUserId(String token) {
         return authServiceClient.validateToken(token)
-                .map(response -> response.user().id())
+                .map(ValidationResponse::userId)
                 .onErrorMap(TimeoutException.class, ex ->
                         new ServiceUnavailableException(
                                 "auth-service",

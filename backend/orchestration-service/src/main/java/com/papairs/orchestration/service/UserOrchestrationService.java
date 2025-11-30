@@ -5,7 +5,7 @@ import com.papairs.orchestration.client.DocsServiceClient;
 import com.papairs.orchestration.config.CircuitBreakerNames;
 import com.papairs.orchestration.dto.request.CreateDocsUserRequest;
 import com.papairs.orchestration.dto.request.RegisterAccountRequest;
-import com.papairs.orchestration.dto.response.AuthResponse;
+import com.papairs.orchestration.dto.response.RegisterResponse;
 import com.papairs.orchestration.dto.response.UserResponse;
 import com.papairs.orchestration.exception.ServiceUnavailableException;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -70,7 +70,7 @@ public class UserOrchestrationService {
      */
     private Mono<UserResponse> createUserInAuthService(RegisterAccountRequest request) {
         return authServiceClient.createUser(request)
-                .map(AuthResponse::user)
+                .map(RegisterResponse::user)
                 .transformDeferred(RetryOperator.of(retryRegistry.retry(CircuitBreakerNames.AUTH_SERVICE)))
                 .transformDeferred(CircuitBreakerOperator.of(circuitBreakerRegistry.circuitBreaker(CircuitBreakerNames.AUTH_SERVICE)))
                 .onErrorMap(this::wrapRetryableErrors);

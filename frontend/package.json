@@ -6,7 +6,9 @@
     "serve": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot",
     "serve:poll": "vue-cli-service serve --port 3000 --host 0.0.0.0 --hot --watch-options-poll 1000",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "heroku-postbuild": "npm run build",
+    "start": "npx serve dist -l $PORT"
   },
   "dependencies": {
     "@tiptap/core": "^2.1.13",

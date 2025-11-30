@@ -76,4 +76,6 @@ public interface PageMemberRepository extends JpaRepository<PageMember, PageMemb
      */
     @Modifying
     void deleteAllByPageId(String pageId);
+
+    
 }

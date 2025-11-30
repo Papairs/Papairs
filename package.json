@@ -1,0 +1,10 @@
+{
+  "name": "papairs",
+  "scripts": {
+    "build": "cd frontend && npm install --include=dev && npm run build",
+    "start": "npx serve frontend/dist -s -l $PORT"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}

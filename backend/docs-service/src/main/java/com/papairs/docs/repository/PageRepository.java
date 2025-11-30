@@ -19,6 +19,8 @@ public interface PageRepository extends JpaRepository<Page, String> {
      */
     List<Page> findByOwnerId(String ownerId);
 
+    List<Page> findByFolderIdIn(List<String> folderIds);
+
     /**
      * Finds all pages located within a specific folder
      * @param folderId The ID of the folder
@@ -57,6 +59,18 @@ public interface PageRepository extends JpaRepository<Page, String> {
             "WHERE p.ownerId = :userId OR pm.userId = :userId " +
             "ORDER BY p.updatedAt DESC")
     List<Page> findAllAccessibleByUserId(String userId);
+
+    /**
+     * Finds all pages a user has access to along with their role in a single optimized query
+     * Returns Object[] with [Page, MemberRole] where MemberRole is null for owned pages
+     * @param userId The ID of the user
+     * @return A {@link List} of Object arrays containing Page and MemberRole
+     */
+    @Query("SELECT p, pm.role FROM Page p " +
+            "LEFT JOIN PageMember pm ON p.pageId = pm.pageId AND pm.userId = :userId " +
+            "WHERE p.ownerId = :userId OR pm.userId = :userId " +
+            "ORDER BY p.updatedAt DESC")
+    List<Object[]> findAllAccessibleByUserIdWithRole(String userId);
 
     /**
      * Deletes all pages within a given list of folder IDs in a single bulk operation

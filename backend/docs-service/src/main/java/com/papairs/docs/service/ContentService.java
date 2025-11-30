@@ -8,7 +8,7 @@ import com.papairs.docs.repository.PageRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-
+import com.papairs.docs.model.Page;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -89,5 +89,16 @@ public class ContentService {
         results.forEach(result -> pageCountMap.put(result.getFolderId(), result.getCount()));
 
         return pageCountMap;
+    }
+
+    public Map<String, List<Page>> getPagesForFolders(List<String> folderIds) {
+        if (CollectionUtils.isEmpty(folderIds)) {
+            return Collections.emptyMap();
+        }
+    
+        List<Page> pages = pageRepository.findByFolderIdIn(folderIds);
+    
+        return pages.stream()
+            .collect(Collectors.groupingBy(Page::getFolderId));
     }
 }

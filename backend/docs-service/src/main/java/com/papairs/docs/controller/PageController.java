@@ -4,7 +4,8 @@ import com.papairs.docs.dto.request.CreatePageRequest;
 import com.papairs.docs.dto.request.MovePageRequest;
 import com.papairs.docs.dto.request.RenamePageRequest;
 import com.papairs.docs.dto.request.UpdatePageRequest;
-import com.papairs.docs.model.Page;
+import com.papairs.docs.dto.response.PageContentResponse;
+import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
 import com.papairs.docs.util.UserId;
@@ -29,11 +30,22 @@ public class PageController {
     /**
      * Get list of pages which the user has access to
      * @param httpRequest HTTP servlet request
-     * @return ResponseEntity with list of pages
+     * @return ResponseEntity with list of pages with user roles
      */
     @GetMapping("/pages")
-    public ResponseEntity<List<Page>> getUserPages(HttpServletRequest httpRequest) {
-        List<Page> pages = pageService.getAllAccessiblePages(UserId.extract(httpRequest));
+    public ResponseEntity<List<PageResponse>> getUserPages(HttpServletRequest httpRequest) {
+        List<PageResponse> pages = pageService.getAllAccessiblePagesWithRoles(UserId.extract(httpRequest));
+        return ResponseEntity.ok(pages);
+    }
+
+    /**
+     * Get list of pages shared with the user (where user is not the owner)
+     * @param httpRequest HTTP servlet request
+     * @return ResponseEntity with list of shared pages
+     */
+    @GetMapping("/pages/shared")
+    public ResponseEntity<List<PageResponse>> getSharedPages(HttpServletRequest httpRequest) {
+        List<PageResponse> pages = pageService.getSharedPagesWithRoles(UserId.extract(httpRequest));
         return ResponseEntity.ok(pages);
     }
 
@@ -44,11 +56,11 @@ public class PageController {
      * @return ResponseEntity with created page
      */
     @PostMapping("/pages")
-    public ResponseEntity<Page> createPage(
+    public ResponseEntity<PageContentResponse> createPage(
             @Valid @RequestBody CreatePageRequest createPageRequest,
             HttpServletRequest request
     ) {
-        Page page = pageService.createPage(
+        PageContentResponse page = pageService.createPage(
             createPageRequest.getTitle(),
             UserId.extract(request),
             createPageRequest.getFolderId()
@@ -63,11 +75,11 @@ public class PageController {
      * @return ResponseEntity with the page
      */
     @GetMapping("/pages/{pageId}")
-    public ResponseEntity<Page> getPage(
+    public ResponseEntity<PageContentResponse> getPage(
             @PathVariable String pageId,
             HttpServletRequest request
     ) {
-        Page page = pageService.getPage(pageId, UserId.extract(request));
+        PageContentResponse page = pageService.getPage(pageId, UserId.extract(request));
         return ResponseEntity.ok(page);
     }
 
@@ -80,14 +92,14 @@ public class PageController {
      * @return ResponseEntity with updated page
      */
     @PutMapping("/pages/{pageId}")
-    public ResponseEntity<Page> updatePage(
+    public ResponseEntity<PageContentResponse> updatePage(
             @PathVariable String pageId,
             @RequestBody UpdatePageRequest updatePageRequest,
             HttpServletRequest request
     ) {
         // Sanitize HTML content to prevent XSS attacks
         String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
-        Page updated = pageService.updatePage(pageId, UserId.extract(request), sanitizedContent);
+        PageContentResponse updated = pageService.updatePage(pageId, UserId.extract(request), sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 
@@ -99,12 +111,12 @@ public class PageController {
      * @return ResponseEntity with renamed page
      */
     @PatchMapping("/pages/{pageId}")
-    public ResponseEntity<Page> renamePage(
+    public ResponseEntity<PageContentResponse> renamePage(
             @PathVariable String pageId,
             @Valid @RequestBody RenamePageRequest renamePageRequest,
             HttpServletRequest request
     ) {
-        Page renamed = pageService.renamePage(
+        PageContentResponse renamed = pageService.renamePage(
             pageId,
             UserId.extract(request),
             renamePageRequest.getNewTitle()
@@ -120,12 +132,12 @@ public class PageController {
      * @return ResponseEntity with moved page
      */
     @PatchMapping("/pages/{pageId}/move")
-    public ResponseEntity<Page> movePage(
+    public ResponseEntity<PageContentResponse> movePage(
             @PathVariable String pageId,
             @Valid @RequestBody MovePageRequest movePageRequest,
             HttpServletRequest request
     ) {
-        Page moved = pageService.movePage(
+        PageContentResponse moved = pageService.movePage(
             pageId,
             movePageRequest.getFolderId(),
             UserId.extract(request)

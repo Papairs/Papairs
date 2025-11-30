@@ -1,58 +1,63 @@
 <template>
   <div 
-    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg p-4 hover:shadow-lg hover:border-accent transition-all cursor-pointer"
+    class="group relative bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg hover:shadow-md transition-all cursor-pointer overflow-visible"
+    style="height: 50px; width: 100%"
     @click="$emit('click')"
   >
-    <div class="flex flex-col items-center">
-      <!-- Folder Icon -->
-      <div class="text-5xl mb-2">📁</div>
+    <!-- Header with Icon, Title and Menu on same line -->
+    <div class="flex items-center justify-between px-4 h-full">
+      <!-- Icon and Title -->
+      <div class="flex items-center space-x-3 flex-1 min-w-0">
+        <!-- Folder Icon -->
+        <div class="flex-shrink-0">
+          <svg class="w-5 h-5 text-content-primary dark:text-content-inverse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+        </div>
+        
+        <!-- Folder Name -->
+        <h3 class="text-sm font-medium text-content-primary dark:text-content-inverse truncate">
+          {{ folder.name }}
+        </h3>
+      </div>
       
-      <!-- Folder Name -->
-      <h3 class="text-sm font-medium text-content-primary dark:text-content-inverse text-center truncate w-full">
-        {{ folder.name }}
-      </h3>
-      
-      <!-- Created Date -->
-      <p class="text-xs text-content-secondary mt-1">
-        {{ formatDate(folder.createdAt) }}
-      </p>
-    </div>
-
-    <!-- Actions Menu (appears on hover) -->
-    <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button 
-        @click.stop="showMenu = !showMenu"
-        class="p-1 rounded-full hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
-      >
-        <svg class="w-5 h-5 text-content-secondary" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-        </svg>
-      </button>
-      
-      <!-- Dropdown Menu -->
-      <div 
-        v-if="showMenu"
-        class="absolute right-0 mt-2 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-10"
-      >
+      <!-- Menu Button Container -->
+      <div class="relative" ref="menuRef">
         <button 
-          @click.stop="handleRename"
-          class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
+          @click.stop="showMenu = !showMenu"
+          class="flex-shrink-0 p-1 rounded hover:bg-surface-light-secondary dark:hover:bg-surface-dark transition-colors"
         >
-          Rename
+          <svg class="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
-        <button 
-          @click.stop="handleDelete"
-          class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900"
+        
+        <!-- Dropdown Menu -->
+        <div 
+          v-if="showMenu"
+          @click.stop
+          class="absolute right-0 top-full mt-1 w-40 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg z-50"
         >
-          Delete
-        </button>
+          <button 
+            @click.stop="handleRename"
+            class="w-full text-left px-4 py-2 text-sm text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark first:rounded-t-lg"
+          >
+            Rename
+          </button>
+          <button 
+            @click.stop="handleDelete"
+            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900 last:rounded-b-lg"
+          >
+            Delete
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 export default {
   name: 'FolderCard',
@@ -65,12 +70,27 @@ export default {
   emits: ['click', 'delete', 'rename'],
   setup(props, { emit }) {
     const showMenu = ref(false)
+    const menuRef = ref(null)
 
     const formatDate = (dateString) => {
       if (!dateString) return ''
       const date = new Date(dateString)
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     }
+
+    const handleClickOutside = (event) => {
+      if (menuRef.value && !menuRef.value.contains(event.target)) {
+        showMenu.value = false
+      }
+    }
+
+    onMounted(() => {
+      document.addEventListener('click', handleClickOutside)
+    })
+
+    onBeforeUnmount(() => {
+      document.removeEventListener('click', handleClickOutside)
+    })
 
     const handleDelete = () => {
       showMenu.value = false
@@ -84,6 +104,7 @@ export default {
 
     return {
       showMenu,
+      menuRef,
       formatDate,
       handleDelete,
       handleRename

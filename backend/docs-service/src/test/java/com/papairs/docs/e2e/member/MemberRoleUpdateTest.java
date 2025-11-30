@@ -242,6 +242,26 @@ public class MemberRoleUpdateTest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("Should deny non-existent user from being removed as member")
+    public void cannotUpdateNonExistentUserAsMember() throws Exception {
+        String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Shared Page");
+        String nonExistentUserId = "non-existent-user-id";
+
+        String updateRequest = """
+            {
+                "role": "EDITOR"
+            }
+            """;
+
+        mockMvc.perform(patch("/api/docs/pages/" + pageId + "/members/" + nonExistentUserId)
+                        .header(USER_ID_HEADER, TEST_USER_1_ID)
+                        .contentType(CONTENT_TYPE_JSON)
+                        .content(updateRequest))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(containsString("does not exist")));
+    }
+
+    @Test
     @DisplayName("EDGE: Updating to same role succeeds idempotently")
     public void updatingToSameRoleSucceeds() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page");

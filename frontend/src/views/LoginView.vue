@@ -34,7 +34,7 @@ export default {
           password: loginData.password
         })
         
-        const token = resp.data?.sessionToken || null
+        const token = resp.data?.token || null
         const user = resp.data?.user || null
         
         if (token && user) {

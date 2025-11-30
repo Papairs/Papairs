@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import DocsView from '../views/DocsView.vue'
 import LoginView from '../views/LoginView.vue'
 import DriveView from '../views/DriveView.vue'
+import SharedView from '../views/SharedView.vue'
 import AutocompleteView from '../views/AutocompleteView.vue'
 
 const routes = [
@@ -15,6 +16,11 @@ const routes = [
     path: '/drive',
     name: 'Drive',
     component: DriveView
+  },
+  {
+    path: '/drive/shared',
+    name: 'SharedWithMe',
+    component: SharedView
   },
   {
     path: '/drive/:folderId',

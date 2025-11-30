@@ -8,7 +8,7 @@
       <!-- Health Check -->
       <TestCard
         title="Health Check"
-        description="GET /api/auth/health"
+        description="GET /actuator/health/services/authService"
         button-text="Test Health"
         :is-loading="testManager.isTestLoading('auth-health')"
         :result="formatResult('auth-health')"

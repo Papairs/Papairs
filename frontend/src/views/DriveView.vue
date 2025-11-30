@@ -3,23 +3,27 @@
 import { ref, onMounted} from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
+import SearchBar from '@/components/SearchBar.vue'
 import FolderCard from '@/components/FolderCard.vue'
 import DocumentCard from '@/components/DocumentCard.vue'
 import CreateFolderModal from '@/components/CreateFolderModal.vue'
 import CreateDocumentModal from '@/components/CreateDocumentModal.vue'
 import RenameFolderModal from '@/components/RenameFolderModal.vue'
 import RenameDocumentModal from '@/components/RenameDocumentModal.vue'
+import ShareDocumentModal from '@/components/ShareDocumentModal.vue'
 import { driveService } from '@/utils/driveService'
 
 export default {
   name: 'DriveView',
   components: {
+    SearchBar,
     FolderCard,
     DocumentCard,
     CreateFolderModal,
     CreateDocumentModal,
     RenameFolderModal,
-    RenameDocumentModal
+    RenameDocumentModal,
+    ShareDocumentModal
   },
   setup() {
     const router = useRouter()
@@ -37,8 +41,12 @@ export default {
     const showCreateDocModal = ref(false)
     const showRenameFolderModal = ref(false)
     const showRenameDocModal = ref(false)
+    const showShareDocModal = ref(false)
     const folderToRename = ref(null)
     const documentToRename = ref(null)
+    const documentToShare = ref(null)
+    const showNotebookDropdown = ref(false)
+    const searchQuery = ref('')
 
     const loadContent = async (folderId = null) => {
       loading.value = true
@@ -103,7 +111,11 @@ export default {
         await loadContent(currentFolderId.value)
       } catch (error) {
         console.error('Error deleting document:', error)
-        alert('Failed to delete document. Please try again.')
+        if (error.response?.status === 403) {
+          alert('You do not have permission to delete this document.')
+        } else {
+          alert('Failed to delete document. Please try again.')
+        }
       }
     }
 
@@ -115,6 +127,11 @@ export default {
     const startRenameDocument = (doc) => {
       documentToRename.value = doc
       showRenameDocModal.value = true
+    }
+
+    const startShareDocument = (doc) => {
+      documentToShare.value = doc
+      showShareDocModal.value = true
     }
 
     const onFolderCreated = () => {
@@ -140,10 +157,46 @@ export default {
       loadContent(currentFolderId.value)
     }
 
+    const onDocumentShared = () => {
+      // Modal handles sharing internally, just keep it open
+      // User can close it manually when done
+      console.log('Member added successfully')
+    }
+    
+    const handleNavigate = (destination) => {
+      switch (destination) {
+        case 'home':
+        case 'notebook':
+          navigateToRoot()
+          break
+        case 'search':
+          // Focus search bar - implement later
+          break
+        case 'settings':
+        case 'trash':
+        case 'shared':
+        case 'favorites':
+        case 'invite':
+          // Navigate to these pages when implemented
+          console.log(`Navigate to ${destination}`)
+          break
+      }
+    }
+
+    const handleSearch = (query) => {
+      // Implement search functionality later
+      console.log('Searching for:', query)
+    }
+
     onMounted(() => {
       initTheme()
       const folderId = route.params.folderId || null
       loadContent(folderId)
+      
+      // Listen for sidebar new document button
+      window.addEventListener('open-create-document-modal', () => {
+        showCreateDocModal.value = true
+      })
     })
 
     return {
@@ -159,8 +212,12 @@ export default {
       showCreateDocModal,
       showRenameFolderModal,
       showRenameDocModal,
+      showShareDocModal,
+      showNotebookDropdown,
+      searchQuery,
       folderToRename,
       documentToRename,
+      documentToShare,
       navigateToRoot,
       navigateToFolder,
       openDocument,
@@ -168,132 +225,145 @@ export default {
       deleteDocument,
       startRenameFolder,
       startRenameDocument,
+      startShareDocument,
       onFolderCreated,
       onDocumentCreated,
       onFolderRenamed,
-      onDocumentRenamed
+      onDocumentRenamed,
+      onDocumentShared,
+      handleNavigate,
+      handleSearch
     }
   }
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface-light dark:bg-surface-dark transition-colors">
-    <!-- Header -->
-    <nav class="bg-white dark:bg-surface-dark-secondary shadow-sm border-b border-border-light dark:border-border-dark">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
-          <div class="flex items-center">
-            <h1 class="text-2xl font-semibold text-content-primary dark:text-content-inverse">
-              📁 Papairs Drive
-            </h1>
+  <div class="flex flex-col h-full bg-surface-light dark:bg-surface-dark transition-colors overflow-hidden">
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto">
+      <!-- Top Bar -->
+      <div class="bg-white dark:bg-surface-dark-secondary border-border-light dark:border-border-dark">
+        <div class="px-8 py-4">
+          <div class="flex items-center justify-between">
+            <!-- Search -->
+            <div class="flex-1 max-w-2xl">
+              <SearchBar 
+                v-model="searchQuery"
+                @search="handleSearch"
+              />
+            </div>
           </div>
-          <div class="flex items-center space-x-4">
-            <button 
-              @click="toggleTheme"
-              class="p-2 rounded-md text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark"
-            >
-              {{ isDark ? '☀️' : '🌙' }}
-            </button>
-            <button 
-              @click="$router.push('/')"
-              class="text-content-secondary hover:text-content-primary dark:hover:text-content-inverse px-3 py-2 rounded-md"
-            >
-              Back to Home
-            </button>
+        </div>
+
+        <!-- Section Header with Dropdown -->
+        <div class="px-8 py-3 border-t-2 border-accent">
+          <div class="flex items-center justify-between">
+            <div class="relative">
+              <button 
+                @click="showNotebookDropdown = !showNotebookDropdown"
+                class="flex items-center space-x-2 text-2xl font-semibold text-content-primary dark:text-content-inverse hover:bg-surface-light-secondary dark:hover:bg-surface-dark py-1 rounded"
+              >
+                <span>{{ currentFolder ? currentFolder.name : 'My Notebooks' }}</span>
+                <svg class="w-5 h-5 transition-transform" :class="{ 'rotate-180': showNotebookDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div 
+                v-if="showNotebookDropdown"
+                class="absolute left-0 mt-2 w-56 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg shadow-lg overflow-hidden z-10"
+              >
+                <button 
+                  @click="showCreateDocModal = true; showNotebookDropdown = false"
+                  class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="text-sm font-medium">New Papair</span>
+                </button>
+                <button 
+                  @click="showCreateFolderModal = true; showNotebookDropdown = false"
+                  class="w-full flex items-center space-x-3 px-4 py-3 hover:bg-surface-light dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors text-left"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                  <span class="text-sm font-medium">New Folder</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </nav>
 
-    <!-- Breadcrumbs -->
-    <div class="bg-white dark:bg-surface-dark-secondary border-b border-border-light dark:border-border-dark">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-        <nav class="flex items-center space-x-2 text-sm">
-          <button 
-            @click="navigateToRoot"
-            class="text-accent hover:text-[#E66900] font-medium"
-          >
-            My Drive
-          </button>
-          <template v-for="(folder, index) in breadcrumbs" :key="folder.folderId">
-            <span class="text-content-secondary">/</span>
-            <button 
-              @click="navigateToFolder(folder.folderId)"
-              :class="index === breadcrumbs.length - 1 
-                ? 'text-content-primary dark:text-content-inverse font-medium' 
-                : 'text-accent hover:text-[#E66900]'"
-            >
-              {{ folder.name }}
-            </button>
-          </template>
-        </nav>
-      </div>
-    </div>
+      <!-- Content Area -->
+      <div class="pt-2 px-8 pb-8">
+        <!-- Section Labels -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-medium text-accent">Notebooks</h3>
+          </div>
+        </div>
 
-    <!-- Toolbar -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div class="flex items-center justify-between mb-6">
-        <h2 class="text-xl font-semibold text-content-primary dark:text-content-inverse">
-          {{ currentFolder ? currentFolder.name : 'My Drive' }}
-        </h2>
-        <div class="flex items-center space-x-3">
-          <button 
-            @click="showCreateFolderModal = true"
-            class="flex items-center space-x-2 px-4 py-2 bg-white dark:bg-surface-dark-secondary border border-border-light dark:border-border-dark rounded-lg hover:bg-surface-light-secondary dark:hover:bg-surface-dark text-content-primary dark:text-content-inverse transition-colors"
-          >
-            <span class="text-lg">📁</span>
-            <span>New Folder</span>
-          </button>
+        <!-- Loading State -->
+        <div v-if="loading" class="flex justify-center items-center py-20">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="folders.length === 0 && documents.length === 0" class="text-center py-20">
+          <div class="text-6xl mb-4">Nothing to see here</div>
+          <h3 class="text-xl font-medium text-content-primary dark:text-content-inverse mb-2">
+            No items yet
+          </h3>
+          <p class="text-content-secondary mb-4">
+            Create a new folder or document to get started
+          </p>
           <button 
             @click="showCreateDocModal = true"
-            class="flex items-center space-x-2 px-4 py-2 bg-accent hover:bg-[#E66900] text-white rounded-lg transition-colors"
+            class="px-6 py-2 bg-accent hover:bg-[#E66900] text-white rounded-lg transition-colors"
           >
-            <span class="text-lg">📄</span>
-            <span>New Document</span>
+            Create First Document
           </button>
         </div>
-      </div>
 
-      <!-- Loading State -->
-      <div v-if="loading" class="flex justify-center items-center py-20">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-accent"></div>
-      </div>
+        <!-- Content Grid -->
+        <div v-else>
+          <!-- Folders Grid -->
+          <div v-if="folders.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
+            <FolderCard 
+              v-for="folder in folders" 
+              :key="folder.folderId"
+              :folder="folder"
+              @click="navigateToFolder(folder.folderId)"
+              @delete="deleteFolder(folder.folderId)"
+              @rename="startRenameFolder(folder)"
+            />
+          </div>
 
-      <!-- Empty State -->
-      <div v-else-if="folders.length === 0 && documents.length === 0" class="text-center py-20">
-        <div class="text-6xl mb-4">📭</div>
-        <h3 class="text-xl font-medium text-content-primary dark:text-content-inverse mb-2">
-          No items yet
-        </h3>
-        <p class="text-content-secondary">
-          Create a new folder or document to get started
-        </p>
+          <!-- Documents Section -->
+          <div v-if="documents.length > 0">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-medium text-accent">Papairs</h3>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <DocumentCard 
+                v-for="doc in documents" 
+                :key="doc.pageId"
+                :document="doc"
+                @click="openDocument(doc.pageId)"
+                @delete="deleteDocument(doc.pageId)"
+                @rename="startRenameDocument(doc)"
+                @share="startShareDocument(doc)"
+              />
+            </div>
+          </div>
+        </div>
       </div>
-
-      <!-- Content Grid -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        <!-- Folders -->
-        <FolderCard 
-          v-for="folder in folders" 
-          :key="folder.folderId"
-          :folder="folder"
-          @click="navigateToFolder(folder.folderId)"
-          @delete="deleteFolder(folder.folderId)"
-          @rename="startRenameFolder(folder)"
-        />
-
-        <!-- Documents -->
-        <DocumentCard 
-          v-for="doc in documents" 
-          :key="doc.pageId"
-          :document="doc"
-          @click="openDocument(doc.pageId)"
-          @delete="deleteDocument(doc.pageId)"
-          @rename="startRenameDocument(doc)"
-        />
-      </div>
-    </div>
+    </main>
 
     <!-- Create Folder Modal -->
     <CreateFolderModal 
@@ -325,6 +395,14 @@ export default {
       :document="documentToRename"
       @close="showRenameDocModal = false"
       @renamed="onDocumentRenamed"
+    />
+
+    <!-- Share Document Modal -->
+    <ShareDocumentModal 
+      v-if="showShareDocModal"
+      :document="documentToShare"
+      @close="showShareDocModal = false"
+      @shared="onDocumentShared"
     />
   </div>
 </template>

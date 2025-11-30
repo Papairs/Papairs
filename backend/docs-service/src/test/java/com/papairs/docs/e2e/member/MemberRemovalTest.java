@@ -195,6 +195,18 @@ public class MemberRemovalTest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("Should deny non-existent user from being removed as member")
+    public void cannotRemoveNonExistentUserAsMember() throws Exception {
+        String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Shared Page");
+        String nonExistentUserId = "non-existent-user-id";
+
+        mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + nonExistentUserId)
+                        .header(USER_ID_HEADER, TEST_USER_1_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(containsString("does not exist")));
+    }
+
+    @Test
     @DisplayName("EDGE: Removing last member succeeds and leaves page with only owner")
     public void removingLastMemberSucceeds() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page");

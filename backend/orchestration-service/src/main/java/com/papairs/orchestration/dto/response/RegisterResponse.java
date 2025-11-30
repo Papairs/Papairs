@@ -1,8 +1,6 @@
 package com.papairs.orchestration.dto.response;
 
-public record AuthResponse(
-        boolean success,
+public record RegisterResponse(
         String message,
-        String sessionToken,
         UserResponse user
 ) {}

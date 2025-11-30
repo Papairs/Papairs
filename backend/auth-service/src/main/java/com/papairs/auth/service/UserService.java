@@ -40,6 +40,7 @@ public class UserService {
      * @param email email address
      * @return Optional<User> if found, else empty
      */
+    @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }
@@ -49,6 +50,7 @@ public class UserService {
      * @param id user ID
      * @return Optional<User> if found, else empty
      */
+    @Transactional(readOnly = true)
     public Optional<User> findById(String id) {
         return userRepository.findById(id);
     }
@@ -58,8 +60,19 @@ public class UserService {
      * @param email email address
      * @return true if exists, else false
      */
+    @Transactional(readOnly = true)
     public boolean emailExists(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    /**
+     * Check if user exists and is active (no entity load)
+     * @param userId user ID
+     * @return true if exists and active, else false
+     */
+    @Transactional(readOnly = true)
+    public boolean existsAndIsActive(String userId) {
+        return userRepository.existsByIdAndIsActiveTrue(userId);
     }
 
     /**
@@ -67,7 +80,7 @@ public class UserService {
      * @param user User entity
      * @return true if active, else false
      */
-    public boolean isUserActive(User user) {
+    public boolean isActive(User user) {
         return user.getIsActive();
     }
 

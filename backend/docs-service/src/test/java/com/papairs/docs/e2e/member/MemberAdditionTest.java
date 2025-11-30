@@ -274,6 +274,27 @@ public class MemberAdditionTest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("Should deny non-existent user from being added as member")
+    public void cannotAddNonExistentUserAsMember() throws Exception {
+        String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Shared Page");
+        String nonExistentUserId = "non-existent-user-id";
+
+        String addMemberRequest = """
+            {
+                "userId": "%s",
+                "role": "VIEWER"
+            }
+            """.formatted(nonExistentUserId);
+
+        mockMvc.perform(post("/api/docs/pages/" + pageId + "/members")
+                        .header(USER_ID_HEADER, TEST_USER_1_ID)
+                        .contentType(CONTENT_TYPE_JSON)
+                        .content(addMemberRequest))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(containsString("does not exist")));
+    }
+
+    @Test
     @DisplayName("EDGE: Added member immediately gains access to page")
     public void addedMemberGainsImmediateAccess() throws Exception {
         String pageId = fixtures.createPageAsUser(TEST_USER_1_ID, "Page");

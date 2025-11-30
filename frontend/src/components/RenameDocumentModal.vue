@@ -77,7 +77,11 @@ export default {
         emit('renamed')
       } catch (err) {
         console.error('Error renaming document:', err)
-        error.value = err.response?.data?.message || 'Failed to rename document. Please try again.'
+        if (err.response?.status === 403) {
+          error.value = 'You do not have permission to rename this document.'
+        } else {
+          error.value = err.response?.data?.message || 'Failed to rename document. Please try again.'
+        }
       } finally {
         loading.value = false
       }

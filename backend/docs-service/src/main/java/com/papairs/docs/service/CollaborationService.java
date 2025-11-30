@@ -114,7 +114,7 @@ public class CollaborationService {
         return documentSessions.computeIfAbsent(docId, k -> {
             try {
                 var page = pageService.getPage(k, userId);
-                String content = page.getContent();
+                String content = page.content();
                 
                 if (content == null || content.isEmpty()) {
                     content = "<p></p>";
