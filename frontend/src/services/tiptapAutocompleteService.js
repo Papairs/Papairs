@@ -3,15 +3,21 @@
  * Provides inline AI-powered autocomplete suggestions for Tiptap editor
  */
 
+// Generate unique ID for each service instance
+let instanceCounter = 0
+
 class TiptapAutocompleteService {
   constructor(apiUrl = 'http://localhost:3001/autocomplete') {
+    this.instanceId = ++instanceCounter
     this.apiUrl = apiUrl
     this.currentSuggestion = ''
     this.isLoading = false
     this.timer = null
-    this.debounceDelay = 1000 // 1 second delay
+    this.debounceDelay = 3000 // 3 second delay
     this.lastFetchedText = ''
+    this.lastInputTime = 0
     this.onSuggestionChangeCallback = null
+    console.log(`[Autocomplete Service #${this.instanceId}] Created`)
   }
 
   /**
@@ -35,11 +41,14 @@ class TiptapAutocompleteService {
 
     // Avoid duplicate requests for same text
     if (text === this.lastFetchedText) {
+      console.log(`[Autocomplete Service #${this.instanceId}] Using cached suggestion`)
       return this.currentSuggestion
     }
 
     this.isLoading = true
     this.lastFetchedText = text
+
+    console.log(`[Autocomplete Service #${this.instanceId}] Fetching suggestion for: "${text.substring(text.length - 50)}"`)
 
     try {
       const response = await fetch(this.apiUrl, {
@@ -55,10 +64,12 @@ class TiptapAutocompleteService {
       const data = await response.json()
       const suggestion = (data.suggestion || '').trim()
       
+      console.log(`[Autocomplete Service #${this.instanceId}] Received suggestion: "${suggestion}"`)
+      
       this.updateSuggestion(suggestion)
       return suggestion
     } catch (error) {
-      console.error('Error fetching autocomplete suggestion:', error)
+      console.error(`[Autocomplete Service #${this.instanceId}] Error:`, error)
       this.clearSuggestion()
       return ''
     } finally {
@@ -69,8 +80,14 @@ class TiptapAutocompleteService {
   /**
    * Request suggestion with debouncing
    * @param {string} text - Current text content
+   * @param {boolean} isUserInput - True if triggered by user typing
    */
-  requestSuggestion(text) {
+  requestSuggestion(text, isUserInput = true) {
+    // Update last input time
+    if (isUserInput) {
+      this.lastInputTime = Date.now()
+    }
+
     // Clear any pending request
     if (this.timer) {
       clearTimeout(this.timer)
@@ -83,9 +100,19 @@ class TiptapAutocompleteService {
       return
     }
 
-    // Set new debounced request
+    // Don't request if text hasn't changed
+    if (text === this.lastFetchedText) {
+      return
+    }
+
+    // Set new debounced request (3 seconds after user stops typing)
     this.timer = setTimeout(() => {
-      this.fetchSuggestion(text)
+      // Only fetch if enough time has passed since last input
+      const timeSinceInput = Date.now() - this.lastInputTime
+      if (timeSinceInput >= this.debounceDelay - 100) {
+        console.log(`[Autocomplete Service #${this.instanceId}] Debounce complete, fetching suggestion`)
+        this.fetchSuggestion(text)
+      }
     }, this.debounceDelay)
   }
 
@@ -95,6 +122,7 @@ class TiptapAutocompleteService {
    */
   updateSuggestion(suggestion) {
     this.currentSuggestion = suggestion
+    console.log(`[Autocomplete Service #${this.instanceId}] Updating suggestion: "${suggestion}"`)
     if (this.onSuggestionChangeCallback) {
       this.onSuggestionChangeCallback(suggestion)
     }
@@ -106,6 +134,7 @@ class TiptapAutocompleteService {
   clearSuggestion() {
     this.currentSuggestion = ''
     this.lastFetchedText = ''
+    console.log(`[Autocomplete Service #${this.instanceId}] Clearing suggestion`)
     if (this.onSuggestionChangeCallback) {
       this.onSuggestionChangeCallback('')
     }
@@ -141,6 +170,7 @@ class TiptapAutocompleteService {
    * Cleanup resources
    */
   destroy() {
+    console.log(`[Autocomplete Service #${this.instanceId}] Destroyed`)
     if (this.timer) {
       clearTimeout(this.timer)
       this.timer = null
