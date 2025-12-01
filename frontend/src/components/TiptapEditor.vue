@@ -57,6 +57,8 @@ import { onBeforeUnmount, ref, watch, nextTick, computed } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContentArea from './EditorContent.vue'
 import './TiptapEditor.css'
+import { createTiptapAutocompleteService } from '@/services/tiptapAutocompleteService'
+import { TiptapAutocomplete } from './TiptapAutocomplete'
 
 export default {
   name: 'TiptapEditor',
@@ -87,6 +89,9 @@ export default {
     const lastContent = ref('')
     const currentTextColor = ref(DEFAULT_TEXT_COLOR)
     const currentFontSize = ref(DEFAULT_FONT_SIZE)
+    
+    // Initialize autocomplete service
+    const autocompleteService = createTiptapAutocompleteService()
 
     // Custom font size extension
     const FontSize = Extension.create({
@@ -154,6 +159,7 @@ export default {
           FontFamily,
           FontSize,
           Color,
+          TiptapAutocomplete(autocompleteService),
         ],
         content: props.modelValue,
         onUpdate: ({ editor }) => {
@@ -295,6 +301,7 @@ export default {
     initEditor()
 
     onBeforeUnmount(() => {
+      autocompleteService.destroy()
       editor.value?.destroy()
     })
 
