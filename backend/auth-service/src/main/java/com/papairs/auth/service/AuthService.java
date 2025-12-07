@@ -88,14 +88,12 @@ public class AuthService {
     }
 
     /**
-     * Validate session and return user information
-     *
-     * Firstly, check if session exists
-     * Check if session is expired, if so delete it
-     * Check if user exists
-     * Check if user is active, if not delete session
-     * Lastly, update session last active timestamp
-     *
+     * Validate session and return user information <p>
+     * Firstly, check if session exists <p>
+     * Check if session is expired, if so delete it <p>
+     * Check if user exists <p>
+     * Check if user is active, if not delete session <p>
+     * Lastly, update session last active timestamp <p>
      * @param token session token
      * @return User entity if valid, else throw exception
      */

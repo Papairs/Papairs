@@ -72,6 +72,10 @@ export class BaseApiController {
         status: response.status
       };
     } catch (error) {
+      // If it's an authentication error, don't return error object - let redirect happen
+      if (error.status === 401) {
+        throw error; // Re-throw to prevent error popup
+      }
       return {
         success: false,
         error: error.message || 'Request failed',
@@ -87,6 +91,20 @@ export class BaseApiController {
     const contentType = response.headers.get('content-type');
     
     if (!response.ok) {
+      // Handle authentication errors - redirect to login
+      if (response.status === 401) {
+        console.error('❌ Authentication failed - status 401');
+        console.error('🔄 Clearing auth data and redirecting to login...');
+        // Clear invalid auth data
+        localStorage.removeItem('papairs_token');
+        localStorage.removeItem('papairs_user');
+        console.error('🚀 Redirecting now...');
+        // Redirect to login page immediately
+        window.location.href = '/login';
+        // Prevent any further code execution
+        return new Promise(() => {}); // Never resolves, page will redirect
+      }
+      
       let errorMessage = `HTTP ${response.status}`;
       
       if (contentType && contentType.includes('application/json')) {

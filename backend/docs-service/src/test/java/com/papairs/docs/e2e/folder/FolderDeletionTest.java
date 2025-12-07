@@ -143,7 +143,7 @@ public class FolderDeletionTest extends AbstractE2ETest {
         mockMvc.perform(delete("/api/docs/folders/" + folderId)
                         .param("recursive", "false"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyFolderExists(folderId, TEST_USER_1_ID);
     }
@@ -387,7 +387,7 @@ public class FolderDeletionTest extends AbstractE2ETest {
                         .param("recursive", "false")
                         .header(USER_ID_HEADER, ""))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyFolderExists(folderId, TEST_USER_1_ID);
     }
@@ -401,7 +401,7 @@ public class FolderDeletionTest extends AbstractE2ETest {
                         .param("recursive", "false")
                         .header(USER_ID_HEADER, "   "))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyFolderExists(folderId, TEST_USER_1_ID);
     }

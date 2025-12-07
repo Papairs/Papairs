@@ -8,8 +8,6 @@ import com.papairs.docs.dto.response.PageContentResponse;
 import com.papairs.docs.dto.response.PageResponse;
 import com.papairs.docs.security.HtmlSanitizer;
 import com.papairs.docs.service.PageService;
-import com.papairs.docs.util.UserId;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,40 +27,40 @@ public class PageController {
 
     /**
      * Get list of pages which the user has access to
-     * @param httpRequest HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of pages with user roles
      */
     @GetMapping("/pages")
-    public ResponseEntity<List<PageResponse>> getUserPages(HttpServletRequest httpRequest) {
-        List<PageResponse> pages = pageService.getAllAccessiblePagesWithRoles(UserId.extract(httpRequest));
+    public ResponseEntity<List<PageResponse>> getUserPages(@RequestHeader("X-User-Id") String userId) {
+        List<PageResponse> pages = pageService.getAllAccessiblePagesWithRoles(userId);
         return ResponseEntity.ok(pages);
     }
 
     /**
      * Get list of pages shared with the user (where user is not the owner)
-     * @param httpRequest HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of shared pages
      */
     @GetMapping("/pages/shared")
-    public ResponseEntity<List<PageResponse>> getSharedPages(HttpServletRequest httpRequest) {
-        List<PageResponse> pages = pageService.getSharedPagesWithRoles(UserId.extract(httpRequest));
+    public ResponseEntity<List<PageResponse>> getSharedPages(@RequestHeader("X-User-Id") String userId) {
+        List<PageResponse> pages = pageService.getSharedPagesWithRoles(userId);
         return ResponseEntity.ok(pages);
     }
 
     /**
      * Create a new page
      * @param createPageRequest create page request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with created page
      */
     @PostMapping("/pages")
     public ResponseEntity<PageContentResponse> createPage(
             @Valid @RequestBody CreatePageRequest createPageRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         PageContentResponse page = pageService.createPage(
             createPageRequest.getTitle(),
-            UserId.extract(request),
+            userId,
             createPageRequest.getFolderId()
         );
         return ResponseEntity.status(201).body(page);
@@ -71,15 +69,15 @@ public class PageController {
     /**
      * Get a page by ID
      * @param pageId page ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with the page
      */
     @GetMapping("/pages/{pageId}")
     public ResponseEntity<PageContentResponse> getPage(
             @PathVariable String pageId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        PageContentResponse page = pageService.getPage(pageId, UserId.extract(request));
+        PageContentResponse page = pageService.getPage(pageId, userId);
         return ResponseEntity.ok(page);
     }
 
@@ -88,18 +86,17 @@ public class PageController {
      * @deprecated Use the Websocket implementation for real-time updates {@link com.papairs.docs.ws.DocWebSocketHandler}
      * @param pageId page ID
      * @param updatePageRequest update page request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with updated page
      */
     @PutMapping("/pages/{pageId}")
     public ResponseEntity<PageContentResponse> updatePage(
             @PathVariable String pageId,
             @RequestBody UpdatePageRequest updatePageRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        // Sanitize HTML content to prevent XSS attacks
         String sanitizedContent = htmlSanitizer.sanitize(updatePageRequest.getContent());
-        PageContentResponse updated = pageService.updatePage(pageId, UserId.extract(request), sanitizedContent);
+        PageContentResponse updated = pageService.updatePage(pageId, userId, sanitizedContent);
         return ResponseEntity.ok(updated);
     }
 
@@ -107,18 +104,18 @@ public class PageController {
      * Rename a page
      * @param pageId page ID
      * @param renamePageRequest rename page request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with renamed page
      */
     @PatchMapping("/pages/{pageId}")
     public ResponseEntity<PageContentResponse> renamePage(
             @PathVariable String pageId,
             @Valid @RequestBody RenamePageRequest renamePageRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         PageContentResponse renamed = pageService.renamePage(
             pageId,
-            UserId.extract(request),
+            userId,
             renamePageRequest.getNewTitle()
         );
         return ResponseEntity.ok(renamed);
@@ -128,19 +125,19 @@ public class PageController {
      * Move a page to a new folder
      * @param pageId page ID
      * @param movePageRequest move page request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with moved page
      */
     @PatchMapping("/pages/{pageId}/move")
     public ResponseEntity<PageContentResponse> movePage(
             @PathVariable String pageId,
             @Valid @RequestBody MovePageRequest movePageRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         PageContentResponse moved = pageService.movePage(
             pageId,
             movePageRequest.getFolderId(),
-            UserId.extract(request)
+            userId
         );
         return ResponseEntity.ok(moved);
     }
@@ -148,15 +145,15 @@ public class PageController {
     /**
      * Delete a page by ID
      * @param pageId page ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with no content
      */
     @DeleteMapping("/pages/{pageId}")
     public ResponseEntity<Void> deletePage(
             @PathVariable String pageId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        pageService.deletePage(pageId, UserId.extract(request));
+        pageService.deletePage(pageId, userId);
         return ResponseEntity.noContent().build();
     }
 }

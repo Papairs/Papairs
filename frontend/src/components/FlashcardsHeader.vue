@@ -66,7 +66,6 @@ export default {
         @click="handleStartStudy"
         class="px-4 py-2 bg-accent text-white rounded-md text-sm font-medium hover:bg-accent-dark transition-colors flex items-center gap-2"
       >
-        <span>📚</span>
         Study Mode
       </button>
       
@@ -75,7 +74,6 @@ export default {
         class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
         title="Reset all flashcards to unlearned"
       >
-        <span>🔄</span>
         Reset All
       </button>
     </div>

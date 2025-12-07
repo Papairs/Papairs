@@ -122,7 +122,7 @@ public class MemberRemovalTest extends AbstractE2ETest {
 
         mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_2_ID))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyUserCanAccessPage(pageId, TEST_USER_2_ID);
     }
@@ -351,7 +351,7 @@ public class MemberRemovalTest extends AbstractE2ETest {
         mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_2_ID)
                         .header(USER_ID_HEADER, ""))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyUserCanAccessPage(pageId, TEST_USER_2_ID);
     }
@@ -365,7 +365,7 @@ public class MemberRemovalTest extends AbstractE2ETest {
         mockMvc.perform(delete("/api/docs/pages/" + pageId + "/members/" + TEST_USER_2_ID)
                         .header(USER_ID_HEADER, "   "))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyUserCanAccessPage(pageId, TEST_USER_2_ID);
     }

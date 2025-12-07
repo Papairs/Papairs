@@ -249,6 +249,101 @@ public class TestFixtures {
                 .andExpect(jsonPath("$.length()").value(expectedCount));
     }
 
+    public String createFlashcardAsUser(String userId, String pageId, String question, String answer) throws Exception {
+        String requestBody = """
+            {
+                "pageId": "%s",
+                "question": "%s",
+                "answer": "%s"
+            }
+            """.formatted(pageId, question, answer);
+
+        String response = mockMvc.perform(post("/api/docs/flashcards")
+                        .header(userIdHeader, userId)
+                        .contentType(contentTypeJson)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readTree(response).get("data").get("flashcardId").asText();
+    }
+
+    public String createFlashcardWithTags(String userId, String pageId, String question, String answer, String... tags) throws Exception {
+        StringBuilder tagsJson = new StringBuilder("[");
+        for (int i = 0; i < tags.length; i++) {
+            tagsJson.append("\"").append(tags[i]).append("\"");
+            if (i < tags.length - 1) {
+                tagsJson.append(", ");
+            }
+        }
+        tagsJson.append("]");
+
+        String requestBody = """
+            {
+                "pageId": "%s",
+                "question": "%s",
+                "answer": "%s",
+                "tags": %s
+            }
+            """.formatted(pageId, question, answer, tagsJson.toString());
+
+        String response = mockMvc.perform(post("/api/docs/flashcards")
+                        .header(userIdHeader, userId)
+                        .contentType(contentTypeJson)
+                        .content(requestBody))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        return objectMapper.readTree(response).get("data").get("flashcardId").asText();
+    }
+
+    public void updateFlashcardLearnedStatus(String flashcardId, String userId, boolean learned) throws Exception {
+        mockMvc.perform(put("/api/docs/flashcards/" + flashcardId + "/learned")
+                        .header(userIdHeader, userId)
+                        .contentType(contentTypeJson)
+                        .content(String.valueOf(learned)))
+                .andExpect(status().isOk());
+    }
+
+    public void verifyFlashcardExists(String flashcardId, String userId) throws Exception {
+        mockMvc.perform(get("/api/docs/flashcards")
+                        .header(userIdHeader, userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.flashcardId == '%s')]".formatted(flashcardId)).exists());
+    }
+
+    public void verifyFlashcardDoesNotExist(String flashcardId, String userId) throws Exception {
+        mockMvc.perform(get("/api/docs/flashcards")
+                        .header(userIdHeader, userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.flashcardId == '%s')]".formatted(flashcardId)).doesNotExist());
+    }
+
+    public void verifyUserHasFlashcardCount(String userId, int expectedCount) throws Exception {
+        mockMvc.perform(get("/api/docs/flashcards")
+                        .header(userIdHeader, userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(expectedCount));
+    }
+
+    public void verifyPageHasFlashcardCount(String pageId, String userId, int expectedCount) throws Exception {
+        mockMvc.perform(get("/api/docs/flashcards/page/" + pageId)
+                        .header(userIdHeader, userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.length()").value(expectedCount));
+    }
+
+    public void verifyFlashcardLearnedStatus(String flashcardId, String userId, boolean expectedLearned) throws Exception {
+        mockMvc.perform(get("/api/docs/flashcards")
+                        .header(userIdHeader, userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[?(@.flashcardId == '%s')].learned".formatted(flashcardId)).value(expectedLearned));
+    }
+
     public void verifyFolderExists(String folderId, String userId) throws Exception {
         mockMvc.perform(get("/api/docs/folders/" + folderId)
                         .header(userIdHeader, userId))

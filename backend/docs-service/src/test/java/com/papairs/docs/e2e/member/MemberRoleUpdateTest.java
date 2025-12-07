@@ -181,7 +181,7 @@ public class MemberRoleUpdateTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(updateRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test
@@ -592,7 +592,7 @@ public class MemberRoleUpdateTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(updateRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyMemberHasRole(pageId, TEST_USER_2_ID, MemberRole.VIEWER);
     }
@@ -614,7 +614,7 @@ public class MemberRoleUpdateTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(updateRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyMemberHasRole(pageId, TEST_USER_2_ID, MemberRole.VIEWER);
     }

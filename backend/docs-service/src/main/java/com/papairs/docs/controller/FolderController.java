@@ -6,8 +6,6 @@ import com.papairs.docs.dto.request.RenameFolderRequest;
 import com.papairs.docs.dto.response.FolderResponse;
 import com.papairs.docs.dto.response.FolderTreeResponse;
 import com.papairs.docs.service.FolderService;
-import com.papairs.docs.util.UserId;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,32 +24,32 @@ public class FolderController {
     /**
      * Get a folder by ID
      * @param folderId folder ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with the folder
      */
     @GetMapping("/folders/{folderId}")
     public ResponseEntity<FolderResponse> getFolder(
             @PathVariable String folderId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        FolderResponse folder = folderService.getFolder(folderId, UserId.extract(request));
+        FolderResponse folder = folderService.getFolder(folderId, userId);
         return ResponseEntity.ok(folder);
     }
 
     /**
      * Create a new folder
      * @param createFolderRequest create folder request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with created folder
      */
     @PostMapping("/folders")
     public ResponseEntity<FolderResponse> createFolder(
             @Valid @RequestBody CreateFolderRequest createFolderRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         FolderResponse folder = folderService.createFolder(
             createFolderRequest.getName(),
-            UserId.extract(request),
+            userId,
             createFolderRequest.getParentFolderId()
         );
         return ResponseEntity.status(201).body(folder);
@@ -61,18 +59,18 @@ public class FolderController {
      * Rename a folder
      * @param folderId folder ID
      * @param renameFolderRequest rename folder request
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with renamed folder
      */
     @PatchMapping("/folders/{folderId}")
     public ResponseEntity<FolderResponse> renameFolder(
             @PathVariable String folderId,
             @Valid @RequestBody RenameFolderRequest renameFolderRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         FolderResponse renamed = folderService.renameFolder(
             folderId,
-            UserId.extract(request),
+            userId,
             renameFolderRequest.getNewName()
         );
         return ResponseEntity.ok(renamed);
@@ -83,18 +81,18 @@ public class FolderController {
      * Delete recursively if specified, which will delete all subfolders and pages within.
      * @param folderId folder ID
      * @param recursive whether to delete recursively. Default is false.
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with no content
      */
     @DeleteMapping("/folders/{folderId}")
     public ResponseEntity<Void> deleteFolder(
             @PathVariable String folderId,
             @RequestParam(required = false, defaultValue = "false") boolean recursive,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         folderService.deleteFolder(
             folderId,
-            UserId.extract(request),
+            userId,
             recursive
         );
         return ResponseEntity.noContent().build();
@@ -102,81 +100,81 @@ public class FolderController {
 
     /**
      * Get all folders for the user
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of folders
      */
     @GetMapping("/folders")
-    public ResponseEntity<List<FolderResponse>> getAllUserFolders(HttpServletRequest request) {
-        List<FolderResponse> folders = folderService.getAllUserFolders(UserId.extract(request));
+    public ResponseEntity<List<FolderResponse>> getAllUserFolders(@RequestHeader("X-User-Id") String userId) {
+        List<FolderResponse> folders = folderService.getAllUserFolders(userId);
         return ResponseEntity.ok(folders);
     }
 
     /**
      * Get root folders for the user
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of root folders
      */
     @GetMapping("/folders/roots")
-    public ResponseEntity<List<FolderResponse>> getRootFolders(HttpServletRequest request) {
-        List<FolderResponse> folders = folderService.getRootFolders(UserId.extract(request));
+    public ResponseEntity<List<FolderResponse>> getRootFolders(@RequestHeader("X-User-Id") String userId) {
+        List<FolderResponse> folders = folderService.getRootFolders(userId);
         return ResponseEntity.ok(folders);
     }
 
     /**
      * Get child folders of a folder
      * @param folderId folder ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of child folders
      */
     @GetMapping("/folders/{folderId}/children")
     public ResponseEntity<List<FolderResponse>> getChildFolders(
             @PathVariable String folderId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        List<FolderResponse> children = folderService.getChildFolders(folderId, UserId.extract(request));
+        List<FolderResponse> children = folderService.getChildFolders(folderId, userId);
         return ResponseEntity.ok(children);
     }
 
     /**
      * Get folder tree starting from a folder
      * @param folderId folder ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with folder tree
      */
     @GetMapping("/folders/{folderId}/tree")
     public ResponseEntity<FolderTreeResponse> getFolderTree(
             @PathVariable String folderId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
-        FolderTreeResponse tree = folderService.getFolderTree(folderId, UserId.extract(request));
+        FolderTreeResponse tree = folderService.getFolderTree(folderId, userId);
         return ResponseEntity.ok(tree);
     }
 
     /**
      * Get all folder trees for the user
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of folder trees
      */
     @GetMapping("/folders/trees")
-    public ResponseEntity<List<FolderTreeResponse>> getUserFolderTrees(HttpServletRequest request) {
-        List<FolderTreeResponse> trees = folderService.getUserFolderTrees(UserId.extract(request));
+    public ResponseEntity<List<FolderTreeResponse>> getUserFolderTrees(@RequestHeader("X-User-Id") String userId) {
+        List<FolderTreeResponse> trees = folderService.getUserFolderTrees(userId);
         return ResponseEntity.ok(trees);
     }
 
     /**
      * Get folder path from root to the specified folder
      * @param folderId folder ID
-     * @param request HTTP servlet request
+     * @param userId user ID from request header
      * @return ResponseEntity with list of folders in the path
      */
     @GetMapping("/folders/{folderId}/path")
     public ResponseEntity<List<FolderResponse>> getFolderPath(
             @PathVariable String folderId,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         List<FolderResponse> path = folderService.getFolderPath(
             folderId,
-            UserId.extract(request)
+            userId
         );
         return ResponseEntity.ok(path);
     }
@@ -191,11 +189,11 @@ public class FolderController {
     public ResponseEntity<FolderResponse> moveFolder(
             @PathVariable String folderId,
             @Valid @RequestBody MoveFolderRequest moveFolderRequest,
-            HttpServletRequest request
+            @RequestHeader("X-User-Id") String userId
     ) {
         FolderResponse moved = folderService.moveFolder(
             folderId,
-            UserId.extract(request),
+            userId,
             moveFolderRequest.getParentFolderId()
         );
         return ResponseEntity.ok(moved);

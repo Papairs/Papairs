@@ -45,6 +45,7 @@ app.get('/health', (req, res) => {
 app.post('/autocomplete', async (req, res) => {
   try {
     const { prompt, userInput, mode = 'fast' } = req.body;
+    const userId = req.headers['X-User-Id'];
     const inputText = prompt || userInput;
 
     if (!inputText || typeof inputText !== 'string' || inputText.trim() === '') {
@@ -58,14 +59,14 @@ app.post('/autocomplete', async (req, res) => {
     
     if (mode === 'advanced') {
       suggestion = await Promise.race([
-        advancedMode.handleRequest(openai, systemPrompt, DOCS_SERVICE_URL, req),
+        advancedMode.handleRequest(openai, systemPrompt, DOCS_SERVICE_URL, req, userId),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Advanced mode timeout')), 120000)
         )
       ]);
     } else {
       suggestion = await Promise.race([
-        fastMode.handleRequest(openai, systemPrompt, DOCS_SERVICE_URL, req),
+        fastMode.handleRequest(openai, systemPrompt, DOCS_SERVICE_URL, req, userId),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Fast mode timeout')), TIMEOUT)
         )
@@ -136,18 +137,6 @@ Do not include any other text, explanations, or markdown formatting.`;
       res.status(500).json({ error: 'Failed to generate flashcards', details: error.message });
     }
   }
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'healthy', 
-    service: 'ai-service',
-    cache: {
-      responseCache: responseCache.size,
-      promptCached: !!systemPromptCache
-    }
-  });
 });
 
 app.listen(PORT, () => {

@@ -9,39 +9,50 @@ import AutocompleteView from '../views/AutocompleteView.vue'
 import FlashcardsView from '../views/FlashcardsView.vue'
 import StudyModeView from '../views/StudyModeView.vue'
 import AIView from '../views/AIView.vue'
+import auth from '../utils/auth'
 
 const routes = [
   {
     path: '/',
+    redirect: '/login'
+  },
+  {
+    path: '/debug',
     name: 'Home',
-    component: HomeView
+    component: HomeView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/drive',
     name: 'Drive',
-    component: DriveView
+    component: DriveView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/drive/shared',
     name: 'SharedWithMe',
-    component: SharedView
+    component: SharedView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/drive/:folderId',
     name: 'DriveFolder',
     component: DriveView,
-    props: true
+    props: true,
+    meta: { requiresAuth: true }
   },
   {
     path: '/docs',
     name: 'Docs',
-    component: DocsView
+    component: DocsView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/docs/:id',
     name: 'DocsWithId',
     component: DocsView,
-    props: true
+    props: true,
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
@@ -51,7 +62,8 @@ const routes = [
   {
     path: '/autocomplete',
     name: 'Autocomplete',
-    component: AutocompleteView
+    component: AutocompleteView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/register',
@@ -61,23 +73,39 @@ const routes = [
   {
     path: '/flashcards',
     name: 'Flashcards',
-    component: FlashcardsView
+    component: FlashcardsView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/study',
     name: 'StudyMode',
-    component: StudyModeView
+    component: StudyModeView,
+    meta: { requiresAuth: true }
   },
   {
     path: '/ai',
     name: 'AI',
-    component: AIView
+    component: AIView,
+    meta: { requiresAuth: true }
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+  const isAuthenticated = auth.isAuthenticated()
+
+  if (requiresAuth && !isAuthenticated) {
+    next('/login')
+  } else if ((to.path === '/login' || to.path === '/register') && isAuthenticated) {
+    next('/drive')
+  } else {
+    next()
+  }
 })
 
 export default router

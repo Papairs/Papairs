@@ -62,10 +62,11 @@ async function uploadFileToOpenAI(openai, fileId, userId, fileName, docsServiceU
     return uploadedFiles.get(fileId);
   }
 
-  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}?userId=${userId}`;
+  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}`;
   const response = await axios.get(downloadUrl, {
     responseType: 'arraybuffer',
-    timeout: DOWNLOAD_TIMEOUT
+    timeout: DOWNLOAD_TIMEOUT,
+    headers: { 'X-User-Id': userId }
   });
 
   const buffer = Buffer.from(response.data);
@@ -100,12 +101,12 @@ async function waitForRunCompletion(openai, threadId, runId, timeout = 120000) {
   return run;
 }
 
-async function handleRequest(openai, systemPrompt, docsServiceUrl, req) {
-  const { prompt, userInput, selectedFiles = [], userId } = req.body;
+async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) {
+  const { prompt, userInput, selectedFiles = [] } = req.body;
   const inputText = prompt || userInput;
 
   if (!userId) {
-    throw new Error('userId is required for advanced mode');
+    throw new Error('X-User-Id header is required for advanced mode');
   }
 
   const assistantId = await getOrCreateAssistant(openai, userId, systemPrompt);

@@ -2,6 +2,7 @@
 import TiptapEditor from '@/components/TiptapEditor.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
+import TrashIcon from '@/components/icons/TrashIcon.vue'
 import { useTiptapDocument } from '@/composables/useTiptapDocument'
 import { createErrorHandler } from '@/utils/errorHandler'
 import { createDocumentWebSocketService } from '@/services/documentWebSocketService'
@@ -11,7 +12,8 @@ import axios from 'axios'
 export default {
   name: 'DocsView',
   components: { 
-    TiptapEditor
+    TiptapEditor,
+    TrashIcon
   },
   props: {
     id: {
@@ -337,7 +339,6 @@ export default {
             @click="toggleFlashcardsPanel"
             class="px-4 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded transition-colors flex items-center gap-2"
           >
-            <span>📚</span>
             <span>{{ showFlashcards ? 'Hide' : 'Show' }} Flashcards</span>
           </button>
         </div>
@@ -381,13 +382,15 @@ export default {
               </div>
               <div v-if="isLoadingFlashcards" class="p-6 text-center text-content-secondary">Loading flashcards...</div>
               <div v-else-if="pageFlashcards.length === 0" class="p-6 text-center text-content-secondary">
-                <p class="mb-2">📝 No flashcards yet</p>
+                <p class="mb-2">No flashcards yet</p>
                 <p class="text-sm">Generate some flashcards from your document!</p>
               </div>
               <div v-else class="p-4 space-y-3">
                 <div v-for="card in pageFlashcards" :key="card.flashcardId" class="bg-surface-light border border-border-light-subtle rounded-lg p-4 hover:shadow-md transition-shadow">
                   <div class="flex justify-end mb-2">
-                    <button @click="deleteFlashcard(card.flashcardId)" class="text-xs text-content-secondary hover:text-red-600 transition-colors" title="Delete flashcard">🗑️</button>
+                    <button @click="deleteFlashcard(card.flashcardId)" class="text-xs text-content-secondary hover:text-red-600 transition-colors" title="Delete flashcard">
+                      <TrashIcon :size="16" />
+                    </button>
                   </div>
                   <div class="mb-3">
                     <p class="text-xs text-content-secondary font-medium mb-1">Question:</p>

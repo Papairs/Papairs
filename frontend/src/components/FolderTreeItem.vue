@@ -1,8 +1,16 @@
 <script>
 import { ref } from 'vue'
+import FolderIcon from '@/components/icons/FolderIcon.vue'
+import FolderOpenIcon from '@/components/icons/FolderOpenIcon.vue'
+import DocumentIcon from '@/components/icons/DocumentIcon.vue'
 
 export default {
   name: 'FolderTreeItem',
+  components: {
+    FolderIcon,
+    FolderOpenIcon,
+    DocumentIcon
+  },
   props: {
     folder: {
       type: Object,
@@ -53,9 +61,8 @@ export default {
       </svg>
       
       <!-- Folder Icon -->
-      <svg class="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
-      </svg>
+      <FolderOpenIcon v-if="isExpanded" :size="16" class="text-content-primary dark:text-content-inverse" />
+      <FolderIcon v-else :size="16" class="text-content-primary dark:text-content-inverse" />
       
       <!-- Folder Name -->
       <span class="text-sm flex-1">{{ folder.name }}</span>
@@ -85,9 +92,7 @@ export default {
         @click="handleDocumentClick(document)"
       >
         <!-- Document Icon -->
-        <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
-        </svg>
+        <DocumentIcon :size="16" class="text-content-primary dark:text-content-inverse" />
         
         <!-- Document Title -->
         <span class="text-sm">{{ document.title }}</span>

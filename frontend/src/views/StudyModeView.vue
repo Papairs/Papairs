@@ -25,7 +25,7 @@
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div
-              class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              class="bg-accent h-2 rounded-full transition-all duration-300"
               :style="{ width: progressPercentage + '%' }"
             ></div>
           </div>
@@ -34,7 +34,11 @@
 
       <!-- Study Complete Message -->
       <div v-if="studyComplete" class="bg-white rounded-lg shadow-lg p-8 text-center">
-        <div class="text-6xl mb-4">🎉</div>
+        <!-- Circular Progress -->
+        <div class="flex justify-center mb-6">
+          <CircularProgress :current="learnedCount" :total="totalFlashcards" :size="160" :stroke-width="12" />
+        </div>
+        
         <h2 class="text-2xl font-bold text-gray-900 mb-2">Study Session Complete!</h2>
         <p class="text-gray-600 mb-6">
           You've reviewed all {{ totalCards }} flashcard{{ totalCards !== 1 ? 's' : '' }}!
@@ -42,15 +46,15 @@
         <div class="flex gap-4 justify-center flex-wrap">
           <button
             @click="restartStudy"
-            class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            class="px-6 py-3 bg-accent text-white rounded-lg hover:opacity-90 transition-opacity"
           >
-            Study Unlearned Cards Again
+            Study Unlearned Cards
           </button>
           <button
             @click="resetAllAndRestart"
-            class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            🔄 Reset All & Study Again
+            Study Again
           </button>
           <button
             @click="exitStudyMode"
@@ -111,14 +115,14 @@
             @click="markAsNotLearned"
             class="px-8 py-4 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center gap-2"
           >
-            <span class="text-xl">❌</span>
+            <XmarkIcon :size="20" />
             Not Learned
           </button>
           <button
             @click="markAsLearned"
             class="px-8 py-4 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center gap-2"
           >
-            <span class="text-xl">✅</span>
+            <CheckmarkIcon :size="20" class="text-green-700" />
             Learned
           </button>
         </div>
@@ -163,11 +167,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import auth from '../utils/auth'
+import CheckmarkIcon from '@/components/icons/CheckmarkIcon.vue'
+import XmarkIcon from '@/components/icons/XmarkIcon.vue'
+import CircularProgress from '@/components/CircularProgress.vue'
 
 const router = useRouter()
 const route = useRoute()
 
 const flashcards = ref([])
+const allFlashcards = ref([])
 const currentIndex = ref(0)
 const isFlipped = ref(false)
 const loading = ref(true)
@@ -187,6 +195,10 @@ const progressPercentage = computed(() => {
   if (totalCards.value === 0) return 0
   return (completedCount.value / totalCards.value) * 100
 })
+
+// Total flashcards and learned count for completion screen
+const totalFlashcards = computed(() => allFlashcards.value.length)
+const learnedCount = computed(() => allFlashcards.value.filter(card => card.learned).length)
 
 onMounted(async () => {
   await loadFlashcards()
@@ -217,6 +229,7 @@ async function loadFlashcards() {
     
     // Filter to only unlearned cards
     const allCards = response.data.data || []
+    allFlashcards.value = allCards
     console.log('All cards:', allCards.length, 'Learned cards:', allCards.filter(card => card.learned).length)
     flashcards.value = allCards.filter(card => !card.learned)
     console.log('Unlearned cards to study:', flashcards.value.length)

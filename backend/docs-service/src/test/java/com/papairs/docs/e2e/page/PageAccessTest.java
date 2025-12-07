@@ -117,7 +117,7 @@ public class PageAccessTest extends AbstractE2ETest {
 
         mockMvc.perform(get("/api/docs/pages/" + pageId))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test
@@ -319,7 +319,7 @@ public class PageAccessTest extends AbstractE2ETest {
         mockMvc.perform(get("/api/docs/pages/" + pageId)
                         .header(USER_ID_HEADER, ""))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test
@@ -330,6 +330,6 @@ public class PageAccessTest extends AbstractE2ETest {
         mockMvc.perform(get("/api/docs/pages/" + pageId)
                         .header(USER_ID_HEADER, "   "))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -77,16 +78,32 @@ public class GlobalExceptionHandler {
     /**
      * Handle missing or malformed Authorization header
      * @param e exception
-     * @return ResponseEntity (401 Unauthorized)
+     * @return ResponseEntity (400 Bad Request)
      */
     @ExceptionHandler(InvalidAuthHeaderException.class)
     public ResponseEntity<ErrorResponse> handleInvalidHeader(InvalidAuthHeaderException e) {
         ErrorResponse error = ErrorResponse.of(
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
                 e.getMessage()
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    /**
+     * Handle missing required request header (thrown by Spring before controller executes)
+     * @param e exception
+     * @return ResponseEntity (400 Bad Request)
+     */
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingHeader(MissingRequestHeaderException e) {
+        String headerName = e.getHeaderName();
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                headerName + " header is required"
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     /**

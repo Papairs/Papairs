@@ -3,10 +3,12 @@ package com.papairs.orchestration.service;
 import com.papairs.orchestration.client.AuthServiceClient;
 import com.papairs.orchestration.dto.response.ValidationResponse;
 import com.papairs.orchestration.exception.ServiceUnavailableException;
-import org.springframework.cloud.gateway.support.TimeoutException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+
+import java.util.concurrent.TimeoutException;
 
 @Service
 public class TokenValidationService {
@@ -34,6 +36,13 @@ public class TokenValidationService {
                         new ServiceUnavailableException(
                                 "auth-service",
                                 "Authentication service timed out",
+                                ex
+                        )
+                )
+                .onErrorMap(WebClientRequestException.class, ex ->
+                        new ServiceUnavailableException(
+                                "auth-service",
+                                "Cannot connect to authentication service",
                                 ex
                         )
                 )

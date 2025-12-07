@@ -1,116 +1,86 @@
 package com.papairs.docs.controller;
 
-import com.backblaze.b2.client.exceptions.B2Exception;
-import com.papairs.docs.dto.request.FileUploadRequest;
-import com.papairs.docs.dto.response.UserFileResponse;
-import com.papairs.docs.exception.FileAlreadyExistsException;
+import com.papairs.docs.dto.response.FileResponse;
 import com.papairs.docs.service.FileService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/files")
-@CrossOrigin(origins = "http://localhost:3000")
+@RequestMapping("/api/docs")
 public class FileController {
 
-    private static final Logger log = LoggerFactory.getLogger(FileController.class);
     private final FileService fileService;
 
     public FileController(FileService fileService) {
         this.fileService = fileService;
     }
 
-    @PostMapping
-    public ResponseEntity<?> uploadFile(@RequestBody FileUploadRequest request) {
-        try {
-            UserFileResponse response = fileService.uploadFile(request);
-            return ResponseEntity.ok(response);
-        } catch (FileAlreadyExistsException e) {
-            log.warn("File already exists: {} for user: {}", request.getFilename(), request.getUserId());
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(new ErrorResponse(e.getMessage()));
-        } catch (B2Exception | IOException e) {
-            log.error("Failed to upload file: {} for user: {}", request.getFilename(), request.getUserId(), e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Failed to upload file: " + e.getMessage()));
-        }
+    /**
+     * Upload a new file
+     * @param file file to upload
+     * @param userId user ID from request header
+     * @return uploaded file details
+     */
+    @PostMapping(path = "/files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<FileResponse> uploadFile(
+            @RequestParam("file") MultipartFile file,
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        FileResponse response = fileService.uploadFile(userId, file);
+        return ResponseEntity.status(201).body(response);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<UserFileResponse>> getUserFiles(@PathVariable String userId) {
-        List<UserFileResponse> files = fileService.getUserFiles(userId);
+    /**
+     * Get all files for a user
+     * @param userId user ID from request header
+     * @return list of user's files
+     */
+    @GetMapping("/files")
+    public ResponseEntity<List<FileResponse>> getUserFiles(
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        List<FileResponse> files = fileService.getUserFiles(userId);
         return ResponseEntity.ok(files);
     }
 
-    @DeleteMapping("/{fileId}")
-    public ResponseEntity<?> deleteFile(@PathVariable String fileId, @RequestParam String userId) {
-        try {
-            fileService.deleteFile(fileId, userId);
-            return ResponseEntity.ok(new SuccessResponse("File deleted successfully"));
-        } catch (RuntimeException e) {
-            log.warn("Failed to delete file {}: {}", fileId, e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(new ErrorResponse(e.getMessage()));
-        } catch (B2Exception | IOException e) {
-            log.error("Error deleting file {}", fileId, e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Failed to delete file: " + e.getMessage()));
-        }
+    /**
+     * Delete a file
+     * @param fileId file ID to delete
+     * @param userId user ID from request header
+     * @return no content on success
+     */
+    @DeleteMapping("/files/{fileId}")
+    public ResponseEntity<Void> deleteFile(
+            @PathVariable String fileId,
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        fileService.deleteFile(fileId, userId);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/download/{fileId}")
-    public ResponseEntity<?> downloadFile(@PathVariable String fileId, @RequestParam String userId) {
-        try {
-            byte[] fileContent = fileService.downloadFile(fileId, userId);
-            
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-            
-            return ResponseEntity.ok()
-                    .headers(headers)
-                    .body(fileContent);
-        } catch (RuntimeException e) {
-            log.warn("Failed to download file {}: {}", fileId, e.getMessage());
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body(new ErrorResponse(e.getMessage()));
-        } catch (B2Exception | IOException e) {
-            log.error("Error downloading file {}", fileId, e);
-            return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Failed to download file: " + e.getMessage()));
-        }
-    }
+    /**
+     * Download a file
+     * @param fileId file ID to download
+     * @param userId user ID from request header
+     * @return file content as byte array
+     */
+    @GetMapping("/files/download/{fileId}")
+    public ResponseEntity<byte[]> downloadFile(
+            @PathVariable String fileId,
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        byte[] content = fileService.downloadFile(fileId, userId);
 
-    private static class ErrorResponse {
-        private String error;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
 
-        public ErrorResponse(String error) {
-            this.error = error;
-        }
-
-        public String getError() { return error; }
-    }
-
-    private static class SuccessResponse {
-        private String message;
-
-        public SuccessResponse(String message) {
-            this.message = message;
-        }
-
-        public String getMessage() { return message; }
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(content);
     }
 }

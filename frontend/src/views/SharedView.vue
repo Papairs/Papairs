@@ -31,7 +31,10 @@ export default {
         console.log('Shared documents:', sharedDocuments.value)
       } catch (error) {
         console.error('Error loading shared documents:', error)
-        alert('Failed to load shared documents. Please try again.')
+        // Don't show alert for authentication errors (user will be redirected)
+        if (error.status !== 401) {
+          alert('Failed to load shared documents. Please try again.')
+        }
       } finally {
         loading.value = false
       }
@@ -50,7 +53,10 @@ export default {
         await loadSharedDocuments()
       } catch (error) {
         console.error('Error deleting document:', error)
-        if (error.response?.status === 403) {
+        // Don't show alert for authentication errors (user will be redirected)
+        if (error.status === 401) {
+          return
+        } else if (error.response?.status === 403 || error.status === 403) {
           alert('You do not have permission to delete this document.')
         } else {
           alert('Failed to delete document. Please try again.')

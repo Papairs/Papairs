@@ -36,8 +36,8 @@ public class GatewayConfig {
     public RouteLocator gatewayRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
 
-                .route("auth-login", r -> r
-                        .path("/api/auth/login")
+                .route("auth-public", r -> r
+                        .path("/api/auth/login", "/api/auth/register")
                         .filters(f -> f
                                 .removeRequestHeader("Origin")
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
@@ -48,35 +48,10 @@ public class GatewayConfig {
                         )
                         .uri(serviceProperties.authService().url()))
 
-                .route("auth-logout", r -> r
-                        .path("/api/auth/logout")
+                .route("auth-protected", r -> r
+                        .path("/api/auth/**")
                         .filters(f -> f
                                 .filter(authenticationFilter)
-                                .removeRequestHeader("Origin")
-                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
-                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
-                                .circuitBreaker(config -> config
-                                        .setName(CircuitBreakerNames.AUTH_SERVICE)
-                                        .setFallbackUri("forward:/fallback/auth-service"))
-                        )
-                        .uri(serviceProperties.authService().url()))
-
-                .route("auth-change-password", r -> r
-                        .path("/api/auth/change-password")
-                        .filters(f -> f
-                                .filter(authenticationFilter)
-                                .removeRequestHeader("Origin")
-                                .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
-                                .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")
-                                .circuitBreaker(config -> config
-                                        .setName(CircuitBreakerNames.AUTH_SERVICE)
-                                        .setFallbackUri("forward:/fallback/auth-service"))
-                        )
-                        .uri(serviceProperties.authService().url()))
-
-                .route("auth-register", r -> r
-                        .path("/api/auth/register")
-                        .filters(f -> f
                                 .removeRequestHeader("Origin")
                                 .dedupeResponseHeader("Access-Control-Allow-Origin", "RETAIN_FIRST")
                                 .dedupeResponseHeader("Access-Control-Allow-Credentials", "RETAIN_FIRST")

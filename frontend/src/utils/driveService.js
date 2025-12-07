@@ -2,6 +2,20 @@ import axios from 'axios'
 import auth from './auth'
 import { API_BASE_URL } from "@/config";
 
+// Axios interceptor to handle 401 errors globally
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('papairs_token');
+      localStorage.removeItem('papairs_user');
+      console.error('🚀 Redirecting now...');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 class DriveService {
   // Helper to get headers with user ID
   getHeaders() {

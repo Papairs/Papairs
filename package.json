@@ -6,5 +6,11 @@
   },
   "engines": {
     "node": "22.x"
+  },
+  "dependencies": {
+    "@tiptap/extension-underline": "^3.13.0",
+    "@tiptap/starter-kit": "^3.13.0",
+    "@tiptap/vue-3": "^3.13.0",
+    "sockjs-client": "^1.6.1"
   }
 }

@@ -94,7 +94,7 @@ public class PageDeletionTest extends AbstractE2ETest {
 
         mockMvc.perform(delete("/api/docs/pages/" + pageId))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyPageExists(pageId, TEST_USER_1_ID);
     }
@@ -305,7 +305,7 @@ public class PageDeletionTest extends AbstractE2ETest {
         mockMvc.perform(delete("/api/docs/pages/" + pageId)
                         .header(USER_ID_HEADER, ""))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyPageExists(pageId, TEST_USER_1_ID);
     }
@@ -318,7 +318,7 @@ public class PageDeletionTest extends AbstractE2ETest {
         mockMvc.perform(delete("/api/docs/pages/" + pageId)
                         .header(USER_ID_HEADER, "   "))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
 
         fixtures.verifyPageExists(pageId, TEST_USER_1_ID);
     }

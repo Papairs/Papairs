@@ -130,11 +130,18 @@ export default {
     },
 
     async loadUserFiles() {
-      const userId = auth.getUserId();
-      if (!userId) return;
+      const token = auth.getToken();
+      if (!token) return;
 
       try {
-        const response = await axios.get(`http://localhost:8082/api/files/${userId}`);
+        const response = await axios.get(
+            `http://localhost:8080/api/docs/files`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+        )
         this.userFiles = response.data;
       } catch (error) {
         console.error('Error loading files:', error);
@@ -149,59 +156,49 @@ export default {
       this.uploadSuccess = null;
       this.isUploading = true;
 
-      const userId = auth.getUserId();
-      if (!userId) {
-        this.uploadError = 'User ID not found. Please log in.';
+      const token = auth.getToken();
+      if (!token) {
+        this.uploadError = 'Token not found. Please log in.';
         this.isUploading = false;
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Content = e.target.result.split(',')[1];
-        
-        // Determine MIME type, default to application/pdf for PDFs or text/plain for others
-        let mimeType = file.type;
-        if (!mimeType) {
-          if (file.name.endsWith('.pdf')) {
-            mimeType = 'application/pdf';
-          } else if (file.name.endsWith('.txt')) {
-            mimeType = 'text/plain';
-          } else if (file.name.endsWith('.md')) {
-            mimeType = 'text/markdown';
-          } else {
-            mimeType = 'text/plain';
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        await axios.post('http://localhost:8080/api/docs/files', formData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
           }
+        )
+
+        this.uploadSuccess = `File "${file.name}" uploaded successfully!`;
+        await this.loadUserFiles();
+        event.target.value = '';
+      } catch (error) {
+        if (error.response?.status === 409) {
+          this.uploadError = `File "${file.name}" already exists`;
+        } else {
+          this.uploadError = error.response?.data?.message || 'Error uploading file';
         }
-
-        try {
-          await axios.post('http://localhost:8082/api/files', {
-            userId: userId,
-            filename: file.name,
-            base64Content: base64Content,
-            mimeType: mimeType
-          });
-
-          this.uploadSuccess = `File "${file.name}" uploaded successfully!`;
-          await this.loadUserFiles();
-          event.target.value = '';
-        } catch (error) {
-          if (error.response?.status === 409) {
-            this.uploadError = `File "${file.name}" already exists`;
-          } else {
-            this.uploadError = error.response?.data || 'Error uploading file';
-          }
-        } finally {
-          this.isUploading = false;
-        }
-      };
-
-      reader.readAsDataURL(file);
+      } finally {
+        this.isUploading = false;
+      }
     },
 
     async deleteFile(fileId) {
       try {
-        await axios.delete(`http://localhost:8082/api/files/${fileId}?userId=${this.userId}`);
+        await axios.delete(
+            `http://localhost:8080/api/docs/files/${fileId}`,
+            {
+              headers: {
+                'Authorization': `Bearer ${auth.getToken()}`
+              }
+            }
+        );
         this.uploadSuccess = 'File deleted successfully';
         await this.loadUserFiles();
         this.selectedFiles = this.selectedFiles.filter(f => f.fileId !== fileId);

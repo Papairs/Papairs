@@ -1,6 +1,13 @@
 <script>
+import PageTitleIcon from '@/components/icons/PageTitleIcon.vue'
+import TrashIcon from '@/components/icons/TrashIcon.vue'
+
 export default {
   name: 'FlashcardCard',
+  components: {
+    PageTitleIcon,
+    TrashIcon
+  },
   props: {
     card: {
       type: Object,
@@ -27,17 +34,18 @@ export default {
     <!-- Card Header -->
     <div class="flex justify-between items-start mb-4">
       <span 
-        class="text-xs px-2 py-1 bg-surface-light dark:bg-surface-dark text-content-secondary rounded border border-border-light-subtle dark:border-border-dark-subtle truncate max-w-[200px]" 
+        class="flex items-center gap-1.5 text-xs px-2 py-1 bg-surface-light dark:bg-surface-dark text-content-secondary rounded border border-border-light-subtle dark:border-border-dark-subtle truncate max-w-[200px]" 
         :title="pageTitle"
       >
-        📄 {{ pageTitle }}
+        <PageTitleIcon :size="14" class="flex-shrink-0" />
+        <span class="truncate">{{ pageTitle }}</span>
       </span>
       <button 
         @click.stop="$emit('delete', card.flashcardId)"
         class="text-content-secondary hover:text-red transition-colors"
         title="Delete flashcard"
       >
-        🗑️
+        <TrashIcon :size="16" />
       </button>
     </div>
 

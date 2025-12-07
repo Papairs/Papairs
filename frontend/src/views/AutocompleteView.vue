@@ -87,11 +87,12 @@ export default {
       }
 
       try {
-        // For now, send empty selectedFiles array
-        // In production, this would come from the file management system
         const response = await fetch('http://localhost:3001/autocomplete', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-User-Id': ''
+          },
           body: JSON.stringify({ 
             userInput: text,
             selectedFiles: [] // TODO: Integrate with file selection

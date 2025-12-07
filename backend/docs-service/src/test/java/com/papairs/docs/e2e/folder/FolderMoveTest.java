@@ -279,7 +279,7 @@ public class FolderMoveTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(moveRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test
@@ -627,7 +627,7 @@ public class FolderMoveTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(moveRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test
@@ -647,7 +647,7 @@ public class FolderMoveTest extends AbstractE2ETest {
                         .contentType(CONTENT_TYPE_JSON)
                         .content(moveRequest))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(containsString("X-User-Id")));
+                .andExpect(jsonPath("$.message").value(containsString("User ID is required")));
     }
 
     @Test

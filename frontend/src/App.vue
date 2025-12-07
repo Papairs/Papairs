@@ -1,15 +1,15 @@
 <script setup>
-import { onMounted } from 'vue';
-import { useTheme } from '@/composables/useTheme';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { computed } from 'vue';
+import { useTheme } from '@/composables/useTheme';
 import SidebarBase from '@/components/SidebarBase.vue';
 
 const { initTheme } = useTheme();
 const route = useRoute();
 
-// Hide sidebar on login and register pages
-const showSidebar = computed(() => route.path !== '/login' && route.path !== '/register');
+const showSidebar = computed(() => {
+  return !route.path.startsWith('/login') && !route.path.startsWith('/register');
+});
 
 onMounted(() => {
   initTheme();

@@ -1,0 +1,194 @@
+# =============================================================================
+# CI/CD Pipeline for Backend Services
+# =============================================================================
+# This workflow runs automatically on:
+# - Pull Requests targeting dev, staging or main branches
+# - Direct pushes to dev, staging or main branches
+#
+# What it does:
+# 1. Detects which services have changes
+# 2. Runs tests for affected services only
+# 3. Verifies Docker builds for affected services
+# 4. Blocks PR merges if tests fail
+#
+# Supported services:
+# - auth-service
+# - docs-service
+# - orchestration-service
+#
+# =============================================================================
+
+name: Backend Services CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - staging
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  
+  push:
+    branches:
+      - dev
+      - staging
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+
+# =============================================================================
+# Detect which services have changes
+# =============================================================================
+jobs:
+  detect-changes:
+    name: 🔍 Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      auth-service: ${{ steps.changes.outputs.auth-service }}
+      docs-service: ${{ steps.changes.outputs.docs-service }}
+      orchestration-service: ${{ steps.changes.outputs.orchestration-service }}
+      services: ${{ steps.set-matrix.outputs.services }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Detect changed services
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            auth-service:
+              - 'backend/auth-service/**'
+            docs-service:
+              - 'backend/docs-service/**'
+            orchestration-service:
+              - 'backend/orchestration-service/**'
+
+      - name: 📋 Set service matrix
+        id: set-matrix
+        run: |
+          services=()
+          if [ "${{ steps.changes.outputs.auth-service }}" == "true" ]; then
+            services+=('{"name": "auth-service", "path": "backend/auth-service", "test-pattern": "com.papairs.auth.e2e.**"}')
+          fi
+          if [ "${{ steps.changes.outputs.docs-service }}" == "true" ]; then
+            services+=('{"name": "docs-service", "path": "backend/docs-service", "test-pattern": "com.papairs.docs.e2e.**"}')
+          fi
+          if [ "${{ steps.changes.outputs.orchestration-service }}" == "true" ]; then
+            services+=('{"name": "orchestration-service", "path": "backend/orchestration-service", "test-pattern": "com.papairs.orchestration.**"}')
+          fi
+          
+          if [ ${#services[@]} -eq 0 ]; then
+            echo "services=[]" >> $GITHUB_OUTPUT
+          else
+            json=$(printf '%s\n' "${services[@]}" | jq -s -c '.')
+            echo "services=$json" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "Detected services: ${services[*]}"
+
+  # =============================================================================
+  # JOB 2: Run Tests (Matrix Strategy)
+  # =============================================================================
+  test:
+    name: 🧪 Test ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '[]' }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    
+    defaults:
+      run:
+        working-directory: ${{ matrix.service.path }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: ☕ Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      
+      - name: 🧪 Run E2E tests
+        run: mvn test -Dtest="${{ matrix.service.test-pattern }}"
+        env:
+          SPRING_PROFILES_ACTIVE: test
+      
+      - name: 📊 Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service.name }}
+          path: ${{ matrix.service.path }}/target/surefire-reports/
+          retention-days: 7
+
+  # =============================================================================
+  # JOB 3: Verify Docker Build (Matrix Strategy)
+  # =============================================================================
+  docker-build:
+    name: 🐳 Docker ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '[]' }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    
+    defaults:
+      run:
+        working-directory: ${{ matrix.service.path }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: 🔨 Build Docker image
+        run: docker build -t ${{ matrix.service.name }}:test .
+
+  # =============================================================================
+  # JOB 4: Code Quality (Matrix Strategy)
+  # =============================================================================
+  code-quality:
+    name: 🔍 Quality ${{ matrix.service.name }}
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.services != '[]' }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.services) }}
+    
+    defaults:
+      run:
+        working-directory: ${{ matrix.service.path }}
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+      
+      - name: ☕ Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+      
+      - name: 🔨 Compile code
+        run: mvn clean compile -DskipTests

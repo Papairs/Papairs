@@ -8,9 +8,10 @@ const axios = require('axios');
 const { parseFile } = require('../parsers');
 
 async function downloadFile(fileId, userId, docsServiceUrl) {
-  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}?userId=${userId}`;
+  const downloadUrl = `${docsServiceUrl}/api/files/download/${fileId}`;
   const response = await axios.get(downloadUrl, {
-    responseType: 'arraybuffer'
+    responseType: 'arraybuffer',
+    headers: { 'X-User-Id': userId }
   });
   return Buffer.from(response.data);
 }
@@ -35,8 +36,8 @@ async function processFile(file, userId, docsServiceUrl) {
   }
 }
 
-async function handleRequest(openai, systemPrompt, docsServiceUrl, req) {
-  const { prompt, userInput, selectedFiles = [], userId } = req.body;
+async function handleRequest(openai, systemPrompt, docsServiceUrl, req, userId) {
+  const { prompt, userInput, selectedFiles = [] } = req.body;
   const inputText = prompt || userInput;
 
   // Process files in parallel
